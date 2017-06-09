@@ -264,6 +264,10 @@ public class YAMLToInternalMappers {
             builder.secrets(secretSpecs);
         }
 
+        if (rawPod.getTransportEncryption() != null) {
+            builder.transportEncryption(from(rawPod.getTransportEncryption()));
+        }
+
         if (rawPod.getVolume() != null || !rawPod.getVolumes().isEmpty()) {
             Collection<VolumeSpec> volumeSpecs = new ArrayList<>(rawPod.getVolume() == null ?
                     Collections.emptyList() :
@@ -613,5 +617,12 @@ public class YAMLToInternalMappers {
         }
         return new PortsSpec(
                 Constants.PORTS_RESOURCE_TYPE, portsValueBuilder.build(), role, principal, envKey, portSpecs);
+    }
+
+    private static TransportEncryptionSpec from(RawTransportEncryption rawTransportEncryption) {
+        return new DefaultTransportEncryptionSpec(
+                rawTransportEncryption.getName(),
+                TransportEncryptionSpec.Type.valueOf(rawTransportEncryption.getType())
+        );
     }
 }
