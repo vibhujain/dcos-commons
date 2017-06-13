@@ -632,32 +632,32 @@
             "default": false
           },
           "jmx_remote": {
-            "description": "Whether to enable remote monitoring",
+            "description": "Whether to enable JMX remote monitoring",
             "type": "boolean",
             "default": false
           },
           "jmx_remote_port": {
-            "description": "Port number for Kafka access",
+            "description": "Port number for remote JMX access",
             "type": "integer",
             "default": 9999
           },
           "jmx_remote_registry_ssl": {
-            "description": "Whether to protect the remote RMI registry using SSL",
+            "description": "Whether to protect JMX access to the remote RMI registry using SSL",
             "type": "boolean",
             "default": false
           },
           "jmx_remote_ssl": {
-            "description": "Whether to enable SSL for remote access",
+            "description": "Whether to enable SSL for remote JMX access",
             "type": "boolean",
             "default": false
           },
           "jmx_remote_authenticate": {
-            "description": "Whether to enable password authentication for remote access",
+            "description": "Whether to enable password authentication for remote JMX access",
             "type": "boolean",
             "default": false
           },
           "jmx_remote_ssl_need_client_auth": {
-            "description": "Whether to enable SSL client authentication for remote access",
+            "description": "Whether to enable SSL client authentication for remote JMX access",
             "type": "boolean",
             "default": false
           },
