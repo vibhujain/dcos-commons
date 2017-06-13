@@ -625,6 +625,46 @@
             "description":"How far a ZK follower can be behind a ZK leader",
             "type":"integer",
             "default":2000
+          },
+          "jmx_enable": {
+            "description": "Whether to enable JMX options",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_remote": {
+            "description": "Whether to enable remote monitoring",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_remote_port": {
+            "description": "Port number for Kafka access",
+            "type": "integer",
+            "default": 9999
+          },
+          "jmx_remote_registry_ssl": {
+            "description": "Whether to protect the remote RMI registry using SSL",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_remote_ssl": {
+            "description": "Whether to enable SSL for remote access",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_remote_authenticate": {
+            "description": "Whether to enable password authentication for remote access",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_remote_ssl_need_client_auth": {
+            "description": "Whether to enable SSL client authentication for remote access",
+            "type": "boolean",
+            "default": false
+          },
+          "jmx_additional_opts": {
+            "description": "JMX argument string (i.e. ' - Dcom.sun.management.jmxremote.access.file = somefile ') to be appended to KAFKA_JMX_OPTS environment variable",
+            "type": "string",
+            "default": ""
           }
         }
       }

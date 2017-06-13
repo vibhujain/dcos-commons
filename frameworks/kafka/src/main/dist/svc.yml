@@ -26,6 +26,11 @@ pods:
             vip:
               prefix: broker
               port: 9092
+          {{#BROKER_JMX_PORT}}
+          jmx:
+            port: {{BROKER_JMX_PORT}}
+            env-key: JMX_PORT
+          {{/BROKER_JMX_PORT}}
         volume:
           path: {{BROKER_DISK_PATH}}
           type: {{BROKER_DISK_TYPE}}

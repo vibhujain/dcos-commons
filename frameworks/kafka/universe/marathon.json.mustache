@@ -60,6 +60,11 @@
     "TASKCFG_ALL_KAFKA_ADVERTISE_HOST" : "set",
     {{/kafka.kafka_advertise_host_ip}}
 
+    {{#kafka.jmx_enable}}
+    "TASKCFG_ALL_KAKFA_JMX_OPTS": "-Dcom.sun.management.jmxremote={{kafka.jmx_remote}} -Dcom.sun.management.jmxremote.registry.ssl={{kafka.jmx_remote_registry_ssl}} -Dcom.sun.management.jmxremote.ssl={{kafka.jmx_remote_ssl}} -Dcom.sun.management.jmxremote.ssl.need.client.auth={{kafka.jmx_remote_ssl_need_client_auth}} -Dcom.sun.management.jmxremote.authenticate={{kafka.jmx_remote_authenticate}} {{kafka.jmx_additional_opts}}",
+    "BROKER_JMX_PORT": "{{kafka.jmx_remote_port}}",
+    {{/kafka.jmx_enable}}
+
     "TASKCFG_ALL_KAFKA_RESERVED_BROKER_MAX_ID": "{{kafka.reserved_broker_max_id}}",
     "TASKCFG_ALL_KAFKA_OFFSETS_TOPIC_COMPRESSION_CODEC": "{{kafka.offsets_topic_compression_codec}}",
     "TASKCFG_ALL_KAFKA_REPLICA_FETCH_MIN_BYTES": "{{kafka.replica_fetch_min_bytes}}",
