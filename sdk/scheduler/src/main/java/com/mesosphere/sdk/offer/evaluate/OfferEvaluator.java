@@ -312,7 +312,16 @@ public class OfferEvaluator {
                 shouldAddExecutorResources = false;
             }
 
-            if (podInstanceRequirement.getPodInstance().getPod().getTransportEncryption().isPresent()) {
+            TaskSpec taskSpec = podInstanceRequirement
+                    .getPodInstance()
+                    .getPod()
+                    .getTasks()
+                    .stream()
+                    .filter(taskSpec1 -> taskSpec1.getName().equals(taskName))
+                    .findFirst()
+                    .get();
+
+            if (taskSpec.getTransportEncryption().size() > 0) {
                 try {
                     evaluationStages.add(TLSEvaluationStage.fromEnvironmentForService(serviceName, taskName));
                 } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {

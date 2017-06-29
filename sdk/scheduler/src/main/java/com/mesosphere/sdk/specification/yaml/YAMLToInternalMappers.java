@@ -264,10 +264,6 @@ public class YAMLToInternalMappers {
             builder.secrets(secretSpecs);
         }
 
-        if (rawPod.getTransportEncryption() != null) {
-            builder.transportEncryption(from(rawPod.getTransportEncryption()));
-        }
-
         if (rawPod.getVolume() != null || !rawPod.getVolumes().isEmpty()) {
             Collection<VolumeSpec> volumeSpecs = new ArrayList<>(rawPod.getVolume() == null ?
                     Collections.emptyList() :
@@ -358,6 +354,15 @@ public class YAMLToInternalMappers {
             discoverySpec = convertDiscovery(rawTask.getDiscovery());
         }
 
+        Collection<TransportEncryptionSpec> transportEncryption = rawTask
+                .getTransportEncryption()
+                .stream()
+                .map(task -> new DefaultTransportEncryptionSpec.Builder()
+                        .name(task.getName())
+                        .type(TransportEncryptionSpec.Type.valueOf(task.getType()))
+                        .build())
+                .collect(Collectors.toCollection(ArrayList::new));
+
         DefaultTaskSpec.Builder builder = DefaultTaskSpec.newBuilder()
                 .commandSpec(commandSpecBuilder.build())
                 .configFiles(configFiles)
@@ -365,6 +370,7 @@ public class YAMLToInternalMappers {
                 .goalState(GoalState.valueOf(StringUtils.upperCase(rawTask.getGoal())))
                 .healthCheckSpec(healthCheckSpec)
                 .readinessCheckSpec(readinessCheckSpec)
+                .setTransportEncryption(transportEncryption)
                 .name(taskName);
 
         if (StringUtils.isNotBlank(rawTask.getResourceSet())) {
@@ -619,10 +625,4 @@ public class YAMLToInternalMappers {
                 Constants.PORTS_RESOURCE_TYPE, portsValueBuilder.build(), role, principal, envKey, portSpecs);
     }
 
-    private static TransportEncryptionSpec from(RawTransportEncryption rawTransportEncryption) {
-        return new DefaultTransportEncryptionSpec(
-                rawTransportEncryption.getName(),
-                TransportEncryptionSpec.Type.valueOf(rawTransportEncryption.getType())
-        );
-    }
 }
