@@ -7,8 +7,8 @@ pods:
     user: root
     container:
       image-name: marvambass/nginx-ssl-secure
-    networks:
-      dcos:
+      networks:
+        dcos:
     secrets:
       key:
         secret: nginx-ssl/key

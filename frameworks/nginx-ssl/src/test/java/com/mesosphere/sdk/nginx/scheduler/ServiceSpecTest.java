@@ -10,7 +10,7 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
                 "EXECUTOR_URI", "",
                 "LIBMESOS_URI", "",
                 "PORT_API", "8080",
-                "FRAMEWORK_NAME", "nginx-ssl",
+                "FRAMEWORK_NAME", "nginx-ssl");
     }
 
     @Test
