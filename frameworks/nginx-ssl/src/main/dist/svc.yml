@@ -1,0 +1,30 @@
+name: nginx-ssl
+scheduler:
+  principal: nginx-ssl-principle
+pods:
+  nginx-pod:
+    count: 1
+    user: root
+    container:
+      image-name: marvambass/nginx-ssl-secure
+    networks:
+      dcos:
+    secrets:
+      key:
+        secret: nginx-ssl/key
+        file: etc/ngix/external/key.pem
+      cert:
+        secret: nginx-ssl/cert
+        file: etc/ngix/external/cert.pem    
+    tasks:
+      server:
+        goal: RUNNING
+        cmd: "nginx"
+        cpus: 1
+        memory: 128
+        ports:
+          http:
+            port: 80
+          https:
+            port: 443
+            

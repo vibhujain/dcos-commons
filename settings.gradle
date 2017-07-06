@@ -30,3 +30,6 @@ project(":frameworks/template").name = "template"
 include 'frameworks/cassandra'
 project(":frameworks/cassandra").name = "cassandra"
 
+include 'frameworks/nginx-ssl'
+project(":frameworks/nginx-ssl").name = "nginx-ssl"
+
