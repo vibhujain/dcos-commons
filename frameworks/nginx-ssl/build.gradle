@@ -36,5 +36,5 @@ distributions {
     }
 }
 
-mainClassName = 'com.mesosphere.sdk.nginx-ssl.scheduler.Main'
+mainClassName = 'com.mesosphere.sdk.nginx.scheduler.Main'
 

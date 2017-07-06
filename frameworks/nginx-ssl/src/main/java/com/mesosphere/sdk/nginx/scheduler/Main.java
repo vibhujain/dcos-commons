@@ -1,4 +1,4 @@
-package com.mesosphere.sdk.nginx-ssl.scheduler;
+package com.mesosphere.sdk.nginx.scheduler;
 
 import com.mesosphere.sdk.scheduler.SchedulerFlags;
 import com.mesosphere.sdk.specification.*;
