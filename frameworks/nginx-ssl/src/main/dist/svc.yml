@@ -12,10 +12,10 @@ pods:
     secrets:
       key:
         secret: nginx-ssl/key
-        file: etc/ngix/external/key.pem
+        file: /etc/ngix/external/key.pem
       cert:
         secret: nginx-ssl/cert
-        file: etc/ngix/external/cert.pem    
+        file: /etc/ngix/external/cert.pem
     tasks:
       server:
         goal: RUNNING
