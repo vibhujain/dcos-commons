@@ -4,6 +4,7 @@
       "service": {
         "type": "object",
         "description": "DC/OS service configuration properties",
+        "name" : "nginx-ssl"
       }
     }
 }
