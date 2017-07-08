@@ -6,22 +6,22 @@ pods:
     count: 1
     user: root
     container:
-      image-name: ubuntu:14.04
+      image-name: marvambass/nginx-ssl-secure
       networks:
         dcos:
     secrets:
       key:
         secret: nginx-ssl/key
-        file: /etc/nginx/external/key.pem
+        file: /etc/ngix/external/key.pem
         env-key: NGINX_SSL_KEY_SECRET
       cert:
         secret: nginx-ssl/cert
-        file: /etc/nginx/external/cert.pem
+        file: /etc/ngix/external/cert.pem
         env-key: NGINX_SSL_CERT_SECRET
     tasks:
       server:
         goal: RUNNING
-        cmd: "env && ls -lrt && ls -lRt /etc && sleep 30000"
+        cmd: "env && ls -lrt && nginx"
         cpus: 1
         memory: 128
         ports:
