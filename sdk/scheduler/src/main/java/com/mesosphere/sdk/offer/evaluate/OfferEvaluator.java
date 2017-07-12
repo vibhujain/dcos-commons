@@ -336,7 +336,7 @@ public class OfferEvaluator {
                         public EvaluationOutcome evaluate(
                                 MesosResourcePool mesosResourcePool, PodInfoBuilder podInfoBuilder) {
                             return EvaluationOutcome.fail(
-                                    this, "Task '%s' has requested TLS which can't be provisioned", taskName);
+                                    this, "Task '%s' has requested TLS which can't be provisioned", taskName).build();
                         }
                     });
                 }
@@ -454,7 +454,8 @@ public class OfferEvaluator {
                         public EvaluationOutcome evaluate(
                                 MesosResourcePool mesosResourcePool, PodInfoBuilder podInfoBuilder) {
                             return EvaluationOutcome.fail(
-                                    this, "Task '%s' has requested TLS which can't be provisioned", taskSpec.getName());
+                                    this, "Task '%s' has requested TLS which can't be provisioned", taskSpec.getName())
+                                    .build();
                         }
                     });
                 }
