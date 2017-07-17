@@ -13,6 +13,12 @@ public class SecretNameGenerator {
     private final String taskName;
     private final String transportEncryptionName;
 
+    public static final String SECRET_NAME_CERTIFICATE = "certificate";
+    public static final String SECRET_NAME_PRIVATE_KEY = "private-key";
+    public static final String SECRET_NAME_CA_CERT = "root-ca-certificate";
+    public static final String SECRET_NAME_KEYSTORE = "keystore";
+    public static final String SECRET_NAME_TRUSTSTORE = "truststore";
+
     public SecretNameGenerator(String namespace, String podName, String taskName, String transportEncryptionName) {
         this.namespace = namespace;
         this.podName = podName;
@@ -35,23 +41,23 @@ public class SecretNameGenerator {
     }
 
     public String getCertificatePath() {
-        return getSecretPath("certificate");
+        return getSecretPath(SECRET_NAME_CERTIFICATE);
     }
 
     public String getPrivateKeyPath() {
-        return getSecretPath("private-key");
+        return getSecretPath(SECRET_NAME_PRIVATE_KEY);
     }
 
     public String getRootCACertPath() {
-        return getSecretPath("root-ca-certificate");
+        return getSecretPath(SECRET_NAME_CA_CERT);
     }
 
     public String getKeyStorePath() {
-        return getSecretPath("keystore");
+        return getSecretPath(SECRET_NAME_KEYSTORE);
     }
 
     public String getTrustStorePath() {
-        return getSecretPath("truststore");
+        return getSecretPath(SECRET_NAME_TRUSTSTORE);
     }
 
     public String getCertificateMountPath() {

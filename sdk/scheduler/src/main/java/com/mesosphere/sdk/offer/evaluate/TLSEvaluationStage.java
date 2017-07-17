@@ -183,9 +183,8 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         private TLSArtifactsGenerator tlsArtifactsGenerator;
         private TLSArtifactsPersister tlsArtifactsPersister;
 
-        public static Builder fromEnvironment()
-                throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
-
+        public static TokenProvider tokenProviderFromEnvironment()
+                throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
             SchedulerFlags flags = SchedulerFlags.fromEnv();
 
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -199,7 +198,12 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
                     .setUid(flags.getServiceAccountUid())
                     .setPrivateKey((RSAPrivateKey) privateKey)
                     .build();
-            TokenProvider tokenProvider = new CachedTokenProvider(serviceAccountIAMTokenProvider);
+            return new CachedTokenProvider(serviceAccountIAMTokenProvider);
+        }
+
+        public static Builder fromEnvironment()
+                throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+            TokenProvider tokenProvider = tokenProviderFromEnvironment();
 
             Executor executor = Executor.newInstance(
                     new DcosHttpClientBuilder()

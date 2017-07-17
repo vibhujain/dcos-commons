@@ -4,8 +4,13 @@ import com.google.protobuf.TextFormat;
 import com.mesosphere.sdk.curator.CuratorLocker;
 import com.mesosphere.sdk.dcos.Capabilities;
 import com.mesosphere.sdk.dcos.DcosCertInstaller;
+import com.mesosphere.sdk.dcos.SecretsClient;
+import com.mesosphere.sdk.dcos.auth.TokenProvider;
+import com.mesosphere.sdk.dcos.http.DcosHttpClientBuilder;
+import com.mesosphere.sdk.dcos.secrets.DefaultSecretsClient;
 import com.mesosphere.sdk.offer.Constants;
 import com.mesosphere.sdk.offer.ResourceUtils;
+import com.mesosphere.sdk.offer.evaluate.TLSEvaluationStage;
 import com.mesosphere.sdk.scheduler.*;
 import com.mesosphere.sdk.scheduler.plan.Plan;
 import com.mesosphere.sdk.scheduler.uninstall.UninstallScheduler;
@@ -13,12 +18,17 @@ import com.mesosphere.sdk.specification.yaml.RawServiceSpec;
 import com.mesosphere.sdk.state.StateStore;
 import com.mesosphere.sdk.state.StateStoreUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.fluent.Executor;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -96,12 +106,28 @@ public class DefaultService implements Service {
                 StateStoreUtils.setUninstalling(stateStore);
             }
 
+            Optional<SecretsClient> secretsClient = Optional.empty();
+            try {
+                TokenProvider tokenProvider = TLSEvaluationStage.Builder.tokenProviderFromEnvironment();
+                Executor executor = Executor.newInstance(
+                        new DcosHttpClientBuilder()
+                                .setTokenProvider(tokenProvider)
+                                .setRedirectStrategy(new LaxRedirectStrategy())
+                                .build());
+                secretsClient = Optional.of(new DefaultSecretsClient(executor));
+            } catch (NoSuchAlgorithmException | IOException | InvalidKeySpecException e) {
+                LOGGER.error("Failed to create a secrets store client," +
+                       "TLS artifacts possibly won't be cleaned up from secrets store");
+                LOGGER.error(String.valueOf(e));
+            }
             LOGGER.info("Launching UninstallScheduler...");
             this.scheduler = new UninstallScheduler(
+                    schedulerBuilder.getServiceSpec().getName(),
                     schedulerBuilder.getSchedulerFlags().getApiServerPort(),
                     schedulerBuilder.getSchedulerFlags().getApiServerInitTimeout(),
                     stateStore,
-                    schedulerBuilder.getConfigStore());
+                    schedulerBuilder.getConfigStore(),
+                    secretsClient);
         } else {
             if (StateStoreUtils.isUninstalling(stateStore)) {
                 LOGGER.error("Service has been previously told to uninstall, this cannot be reversed. " +

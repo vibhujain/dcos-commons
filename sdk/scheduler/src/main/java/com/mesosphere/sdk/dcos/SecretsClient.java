@@ -13,7 +13,7 @@ import java.util.Collection;
 public interface SecretsClient {
 
     /**
-     * List all secrets for given path.
+     * List all secrets paths for given path.
      * @param path
      * @return
      * @throws IOException
