@@ -55,7 +55,7 @@ to use a custom `trustStore` which limits which TLS connection will be verified.
 To build a application for local testing run:
 
 ```
-./gradlew shadowJar
+./gradlew :keystore-app:shadowJar
 ```
 
 which produces single jar in `./build/libs/keystore-app-${VERSION}-all.jar`.
@@ -64,7 +64,7 @@ For building an artifact that is packaged with `integration-test.yml` file
 that can be used to run SDK TLS integration tests run:
 
 ```
-./gradlew integrationTestZip
+./gradlew :keystore-app:integrationTestZip
 ```
 
 The task builds a ZIP file contianing `shadowJar` package and the
