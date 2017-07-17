@@ -132,6 +132,18 @@ def hello_world_service(service_account):
 
     install.uninstall(PACKAGE_NAME)
 
+    # Make sure that all the TLS artifacts were removed from the secrets store.
+    output = cmd.run_cli('security secret list {name}'.format(PACKAGE_NAME))
+    artifact_suffixes = [
+        'certificate', 'private-key', 'root-ca-certificate',
+        'keystore', 'truststore'
+        ]
+
+    for suffix in artifact_suffixes:
+        assert suffix not in output
+
+
+
 
 def test_java_truststore(hello_world_service):
     """
