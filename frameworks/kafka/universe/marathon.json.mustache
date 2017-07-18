@@ -48,6 +48,7 @@
     "BROKER_DISK_PATH": "{{brokers.disk_path}}",
     "BROKER_JAVA_HEAP": "{{brokers.heap.size}}",
     "BROKER_PORT": "{{brokers.port}}",
+    "BROKER_PORT_TLS": "{{brokers.port_tls}}",
 
     {{#service.secret_name}}
     "DCOS_SERVICE_ACCOUNT_CREDENTIAL": { "secret": "serviceCredential" },
@@ -60,6 +61,11 @@
     "VIRTUAL_NETWORK_NAME": "{{brokers.virtual_network}}",
     "CNI_PLUGIN_LABELS": "{{brokers.cni_plugin_labels}}",
     {{/service.virtual_networks}}
+
+    {{#service.tls}}
+    "ENABLE_TLS": "yes",
+    "TASKCFG_ALL_KAFKA_ENABLE_TLS": "{{service.tls}}",
+    {{/service.tls}}
 
     "CONFIG_TEMPLATE_PATH": "kafka-scheduler",
     "KAFKA_VERSION_PATH": "kafka_2.11-0.10.2.1",

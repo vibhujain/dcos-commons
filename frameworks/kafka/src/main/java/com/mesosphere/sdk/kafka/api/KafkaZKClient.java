@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.List;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.stream.StreamSupport;
 
 /**
  * Read-only interface for retrieving information from ZooKeeper for Kafka brokers and topics.
@@ -91,6 +92,26 @@ public class KafkaZKClient {
                 byte[] bytes = zkClient.getData().forPath(IDS_PATH + "/" + id);
                 JSONObject broker = new JSONObject(new String(bytes, StandardCharsets.UTF_8));
                 endpoints.add(broker.getString("host") + ":" + broker.getInt("port"));
+            }
+        } catch (Exception ex) {
+            log.error("Failed to retrieve broker endpoints with exception: ", ex);
+        }
+        return endpoints;
+    }
+
+    public List<String> getBrokerTLSEndpoints() {
+        List<String> endpoints = new ArrayList<>();
+        try {
+            List<String> ids = zkClient.getChildren().forPath(IDS_PATH);
+            for (String id : ids) {
+                byte[] bytes = zkClient.getData().forPath(IDS_PATH + "/" + id);
+                JSONObject broker = new JSONObject(new String(bytes, StandardCharsets.UTF_8));
+                String tlsProtocolName = broker.getJSONObject("listener_security_protocol_map").getString("SSL");
+                StreamSupport.stream(broker.getJSONArray("endpoints").spliterator(), false)
+                        .map(endpoint -> endpoint.toString())
+                        .filter(endpoint -> endpoint.startsWith(tlsProtocolName))
+                        .map(endpoint -> endpoint.substring((tlsProtocolName + "://").length()))
+                        .forEach(endpoint -> endpoints.add(endpoint));
             }
         } catch (Exception ex) {
             log.error("Failed to retrieve broker endpoints with exception: ", ex);

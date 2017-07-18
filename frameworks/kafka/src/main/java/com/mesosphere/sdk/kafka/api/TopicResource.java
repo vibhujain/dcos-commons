@@ -105,10 +105,15 @@ public class TopicResource {
                 result.put("Error", "Must designate an 'operation'.  " +
                         "Possibles operations are [producer-test, delete, partitions, config, deleteConfig].");
             } else {
+                int messageCount = 0;
                 switch (type) {
                     case "producer-test":
-                        int messageCount = Integer.parseInt(messages);
+                        messageCount = Integer.parseInt(messages);
                         result = cmdExecutor.producerTest(topicName, messageCount);
+                        break;
+                    case "producer-test-tls":
+                        messageCount = Integer.parseInt(messages);
+                        result = cmdExecutor.producerTestOverTLS(topicName, messageCount);
                         break;
                     case "partitions":
                         cmds = Arrays.asList("--partitions", partitions);
