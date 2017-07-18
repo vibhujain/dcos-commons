@@ -149,8 +149,8 @@ def hello_world_service(service_account):
         assert suffix not in output
 
 
-
-
+@pytest.mark.tls
+@pytest.mark.sanity
 def test_java_truststore(hello_world_service):
     """
     Make an HTTP request from CLI to nginx exposed service.
@@ -176,6 +176,8 @@ def test_java_truststore(hello_world_service):
     assert 'status=200' in output
 
 
+@pytest.mark.tls
+@pytest.mark.sanity
 def test_tls_basic_artifacts(hello_world_service):
     task_id = tasks.get_task_ids(PACKAGE_NAME, 'artifacts')[0]
     assert task_id
@@ -204,6 +206,8 @@ def test_tls_basic_artifacts(hello_world_service):
     assert root_ca_cert_in_truststore.signature == cluster_root_ca_cert.signature
 
 
+@pytest.mark.tls
+@pytest.mark.sanity
 def test_java_keystore(hello_world_service):
     """
     Java `keystore-app` presents itself with provided TLS certificate
@@ -229,6 +233,8 @@ def test_java_keystore(hello_world_service):
     assert 'host "keystore-https.hello-world.l4lb.thisdcos.directory" matched cert\'s "*.hello-world.l4lb.thisdcos.directory"' in output
 
 
+@pytest.mark.tls
+@pytest.mark.sanity
 def test_tls_nginx(hello_world_service):
     """
     Checks that NGINX exposes TLS service with correct PEM encoded end-entity
