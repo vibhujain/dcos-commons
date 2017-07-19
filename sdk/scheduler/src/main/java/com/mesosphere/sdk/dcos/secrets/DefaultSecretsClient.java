@@ -1,5 +1,6 @@
 package com.mesosphere.sdk.dcos.secrets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.mesosphere.sdk.dcos.DcosConstants;
 import com.mesosphere.sdk.dcos.SecretsClient;
@@ -30,6 +31,8 @@ public class DefaultSecretsClient implements SecretsClient {
     private URL baseUrl;
     private String store;
     private Executor httpExecutor;
+
+    private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DefaultSecretsClient(URL baseUrl, String store, Executor executor) {
         this.baseUrl = URLHelper.addPathUnchecked(baseUrl, String.format(STORE_PREFIX, store));
@@ -66,9 +69,9 @@ public class DefaultSecretsClient implements SecretsClient {
 
     @Override
     public void create(String path, Secret secret) throws IOException, SecretsException {
-        JSONObject body = secretToJSONObject(secret);
+        String body = OBJECT_MAPPER.writeValueAsString(secret);
         Request httpRequest = Request.Put(urlForPath(path).toString())
-                .bodyString(body.toString(), ContentType.APPLICATION_JSON);
+                .bodyString(body, ContentType.APPLICATION_JSON);
         StatusLine statusLine = httpExecutor.execute(httpRequest).returnResponse().getStatusLine();
 
         handleResponseStatusLine(statusLine, 201, path);
@@ -83,9 +86,9 @@ public class DefaultSecretsClient implements SecretsClient {
 
     @Override
     public void update(String path, Secret secret) throws IOException, SecretsException {
-        JSONObject body = secretToJSONObject(secret);
+        String body = OBJECT_MAPPER.writeValueAsString(secret);
         Request httpRequest = Request.Patch(urlForPath(path).toString())
-                .bodyString(body.toString(), ContentType.APPLICATION_JSON);
+                .bodyString(body, ContentType.APPLICATION_JSON);
         StatusLine statusLine = httpExecutor.execute(httpRequest).returnResponse().getStatusLine();
 
         handleResponseStatusLine(statusLine, 204, path);
@@ -94,17 +97,6 @@ public class DefaultSecretsClient implements SecretsClient {
     @VisibleForTesting
     protected URL urlForPath(String path) {
         return URLHelper.addPathUnchecked(baseUrl, path);
-    }
-
-
-    protected JSONObject secretToJSONObject(Secret secret) {
-        JSONObject body = new JSONObject();
-        body.put("value", secret.getValue());
-        body.put("author", secret.getAuthor());
-        body.put("created", secret.getCreated());
-        body.put("description", secret.getDescription());
-        body.put("labels", secret.getLabels());
-        return body;
     }
 
     /**
