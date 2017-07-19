@@ -22,9 +22,11 @@ public class CertificateNamesGeneratorTest {
 
         X500Name subject = certificateNamesGenerator.getSubject();
 
+        String expectedCNName = taskDnsName(TestConstants.TASK_NAME, TestConstants.SERVICE_NAME);
+
         RDN[] cnRDNs = subject.getRDNs(BCStyle.CN);
         Assert.assertEquals(cnRDNs.length, 1);
-        Assert.assertEquals(cnRDNs[0].getFirst().getValue().toString(), TestConstants.SERVICE_NAME);
+        Assert.assertEquals(expectedCNName, cnRDNs[0].getFirst().getValue().toString());
     }
 
     @Test
@@ -57,6 +59,8 @@ public class CertificateNamesGeneratorTest {
         String serviceNameWithSlashes = "service/name/with/slashes";
         String serviceNameWithoutSlashes = "servicenamewithslashes";
 
+        String expectedCNName = taskDnsName(TestConstants.TASK_NAME, serviceNameWithoutSlashes);
+
         CertificateNamesGenerator certificateNamesGenerator = new CertificateNamesGenerator(
                 serviceNameWithSlashes, TestConstants.TASK_NAME);
 
@@ -66,7 +70,7 @@ public class CertificateNamesGeneratorTest {
                 .getFirst()
                 .getValue()
                 .toString();
-        Assert.assertEquals(cnName, serviceNameWithoutSlashes);
+        Assert.assertEquals(expectedCNName, cnName);
 
         List<String> names = Arrays.stream(certificateNamesGenerator.getSANs().getNames())
                 .map(name -> name.getName().toString())

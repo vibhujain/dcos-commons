@@ -193,10 +193,11 @@ def test_tls_basic_artifacts(hello_world_service):
     # Check that certificate subject maches the service name
     common_name = end_entity_cert.subject.get_attributes_for_oid(
         NameOID.COMMON_NAME)[0].value
-    assert common_name == PACKAGE_NAME
+    assert common_name == hosts.autoip_host(PACKAGE_NAME, task_id)
 
     sans = end_entity_cert.extensions.get_extension_for_oid(
         ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+    assert len(sans) == 3
 
     cluster_root_ca_cert = x509.load_pem_x509_certificate(
         cmd.request(

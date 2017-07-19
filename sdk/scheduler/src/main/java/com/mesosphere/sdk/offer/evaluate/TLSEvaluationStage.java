@@ -175,6 +175,8 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         private String serviceName;
         @Valid
         private String taskName;
+        @Valid
+        private String taskInstanceName;
 
         private CertificateAuthorityClient certificateAuthorityClient;
         private SecretsClient secretsClient;
@@ -233,6 +235,11 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
             return this;
         }
 
+        public Builder setTaskInstanceName(String taskInstanceName) {
+            this.taskInstanceName = taskInstanceName;
+            return this;
+        }
+
         public CertificateAuthorityClient getCertificateAuthorityClient() {
             return certificateAuthorityClient;
         }
@@ -278,7 +285,7 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         private TLSArtifactsGenerator getTLSArtifactsGenerator() {
             return tlsArtifactsGenerator == null ?
                     new TLSArtifactsGenerator(
-                        serviceName, taskName, getKeyPairGenerator(), getCertificateAuthorityClient()) :
+                        serviceName, taskInstanceName, getKeyPairGenerator(), getCertificateAuthorityClient()) :
                     tlsArtifactsGenerator;
         }
 

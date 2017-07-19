@@ -11,11 +11,11 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 public class CertificateNamesGenerator {
 
     private String serviceName;
-    private String taskName;
+    private String taskInstanceName;
 
-    public CertificateNamesGenerator(String serviceName, String taskName) {
+    public CertificateNamesGenerator(String serviceName, String taskInstanceName) {
         this.serviceName = serviceName;
-        this.taskName = taskName;
+        this.taskInstanceName = taskInstanceName;
     }
 
     /**
@@ -23,10 +23,8 @@ public class CertificateNamesGenerator {
      * @return
      */
     public X500Name getSubject() {
-       // TODO(mh): Should we somehow improve certificate name here? Right now it reflects only service
-       //           name. Should we somehow add pod name and requested certificate name?
        return new CertificateSubjectBuilder()
-                .setCommonName(removeSlashes(serviceName))
+                .setCommonName(EndpointUtils.toAutoIpHostname(serviceName, taskInstanceName))
                 .build();
     }
 
@@ -36,7 +34,7 @@ public class CertificateNamesGenerator {
      */
     public GeneralNames getSANs() {
         String autoIpWildcardName = EndpointUtils.toAutoIpHostname(serviceName, "*");
-        String autoIpTaskName = EndpointUtils.toAutoIpHostname(serviceName, taskName);
+        String autoIpTaskName = EndpointUtils.toAutoIpHostname(serviceName, taskInstanceName);
 
         EndpointUtils.VipInfo vipInfo = new EndpointUtils.VipInfo("*", 0);
         String vipWildcardName = EndpointUtils.toVipHostname(serviceName, vipInfo);
@@ -52,13 +50,6 @@ public class CertificateNamesGenerator {
         );
 
         return subAtlNames;
-    }
-
-    /**
-     * "/group1/group2/group3/group4/group5/kafka" => "group1group2group3group4group5kafka".
-     */
-    private static String removeSlashes(String name) {
-        return name.replace("/", "");
     }
 
 }

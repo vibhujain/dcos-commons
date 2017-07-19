@@ -329,6 +329,8 @@ public class OfferEvaluator {
                             .get()
                             .setServiceName(serviceName)
                             .setTaskName(taskName)
+                            .setTaskInstanceName(
+                                    TaskSpec.getInstanceName(podInstanceRequirement.getPodInstance(), taskSpec))
                             .build());
                 } else {
                     evaluationStages.add(new OfferEvaluationStage() {
@@ -426,13 +428,15 @@ public class OfferEvaluator {
         evaluationStages.addAll(executorResourceMapper.getEvaluationStages());
 
         for (TaskSpec taskSpec : taskSpecs) {
-            String taskInfoName = TaskSpec.getInstanceName(podInstanceRequirement.getPodInstance(), taskSpec.getName());
+            String taskInstanceName = TaskSpec.getInstanceName(
+                    podInstanceRequirement.getPodInstance(), taskSpec.getName());
             Protos.TaskInfo taskInfo = getTaskInfoSharingResourceSet(
                     podInstanceRequirement.getPodInstance(),
                     taskSpec,
                     podTasks);
             if (taskInfo == null) {
-                logger.error(String.format("Failed to fetch task %s.  Cannot generate resource map.", taskInfoName));
+                logger.error(
+                        String.format("Failed to fetch task %s.  Cannot generate resource map.", taskInstanceName));
                 return Collections.emptyList();
             }
 
@@ -447,6 +451,7 @@ public class OfferEvaluator {
                             .get()
                             .setServiceName(serviceName)
                             .setTaskName(taskSpec.getName())
+                            .setTaskInstanceName(taskInstanceName)
                             .build());
                 } else {
                     evaluationStages.add(new OfferEvaluationStage() {

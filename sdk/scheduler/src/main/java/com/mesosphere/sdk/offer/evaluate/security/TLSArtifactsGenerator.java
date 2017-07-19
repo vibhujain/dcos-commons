@@ -31,17 +31,20 @@ import java.util.stream.Collectors;
 public class TLSArtifactsGenerator {
 
     private String serviceName;
-    private String taskName;
+    private String taskInstanceName;
     private KeyPairGenerator keyPairGenerator;
     private CertificateAuthorityClient certificateAuthorityClient;
 
+    private static final String KEYSTORE_PRIVATE_KEY_ALIAS = "default";
+    private static final String KEYSTORE_ROOT_CA_CERT_ALIAS = "dcos-root";
+
     public TLSArtifactsGenerator(
             String serviceName,
-            String taskName,
+            String taskInstanceName,
             KeyPairGenerator keyPairGenerator,
             CertificateAuthorityClient certificateAuthorityClient) {
         this.serviceName = serviceName;
-        this.taskName = taskName;
+        this.taskInstanceName = taskInstanceName;
         this.keyPairGenerator = keyPairGenerator;
         this.certificateAuthorityClient = certificateAuthorityClient;
     }
@@ -88,10 +91,16 @@ public class TLSArtifactsGenerator {
                 new Certificate[certificateChain.size()]);
 
         // TODO(mh): Make configurable "default" identifier
-        keyStore.setKeyEntry("default", keyPair.getPrivate(), TLSArtifacts.getKeystorePassword(), keyStoreChain);
+        keyStore.setKeyEntry(
+                KEYSTORE_PRIVATE_KEY_ALIAS,
+                keyPair.getPrivate(),
+                TLSArtifacts.getKeystorePassword(),
+                keyStoreChain);
 
         KeyStore trustStore = createEmptyKeyStore();
-        trustStore.setCertificateEntry("dcos-root", certificateChain.get(certificateChain.size() - 1));
+        trustStore.setCertificateEntry(
+                KEYSTORE_ROOT_CA_CERT_ALIAS,
+                certificateChain.get(certificateChain.size() - 1));
 
         return new TLSArtifacts(certPEM, privateKeyPEM, rootCACertPEM, keyStore, trustStore);
     }
@@ -107,7 +116,7 @@ public class TLSArtifactsGenerator {
             KeyPair keyPair) throws IOException, OperatorCreationException {
 
         CertificateNamesGenerator certificateNamesGenerator = new CertificateNamesGenerator(
-                serviceName, taskName);
+                serviceName, taskInstanceName);
 
         ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
 
