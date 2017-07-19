@@ -73,7 +73,7 @@ def test_tls_endpoints(kafka_service_tls):
     endpoint_tls = service_cli(
         'endpoints {name}'.format(name=BROKER_TLS_ENDPOINT)
     )
-    assert len(endpoint_tls['dns']) == 2
+    assert len(endpoint_tls['dns']) == DEFAULT_BROKER_COUNT
 
 
 @pytest.mark.tls
@@ -85,6 +85,9 @@ def test_producer_over_tls(kafka_service_tls):
 
     topic_info = service_cli('topic describe {}'.format(DEFAULT_TOPIC_NAME))
     assert len(topic_info['partitions']) == DEFAULT_PARTITION_COUNT
+
+    # Warm up TLS connections
+    write_info = service_cli('topic producer_test_tls {} {}'.format(DEFAULT_TOPIC_NAME, 10))
 
     num_messages = 10
     write_info = service_cli('topic producer_test_tls {} {}'.format(DEFAULT_TOPIC_NAME, num_messages))
