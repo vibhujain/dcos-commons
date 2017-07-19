@@ -163,7 +163,7 @@ def test_java_truststore(hello_world_service):
     # service itself exposed via VIP.
     # This will test whether the service is serving correct end-entity
     # certificate from keystore and if CLI client can verify certificate
-    # with custom trustostore configuration.
+    # with custom truststore configuration.
     command = _java_command(
         'java -jar ' + KEYSTORE_APP_JAR_NAME + ' truststoretest '
         'integration-test.yml '

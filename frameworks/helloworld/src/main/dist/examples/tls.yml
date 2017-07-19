@@ -20,13 +20,6 @@ pods:
         memory: 256
         env:
           SLEEP_DURATION: {{SLEEP_DURATION}}
-        health-check:
-          cmd: stat secure-tls-pod.crt &> /dev/null && stat keystore.keystore.base64 &> /dev/null
-          interval: 5
-          grace-period: 30
-          delay: 0
-          timeout: 10
-          max-consecutive-failures: 3
         transport-encryption:
           - name: secure-tls-pod
             type: TLS
@@ -54,13 +47,6 @@ pods:
                 java -jar keystore-app-{{KEYSTORE_APP_VERSION}}-all.jar server integration-test.yml
         cpus: 0.5
         memory: 512
-        health-check:
-          cmd: stat dropwizard.keystore &> /dev/null
-          interval: 5
-          grace-period: 300
-          delay: 0
-          timeout: 10
-          max-consecutive-failures: 3
         transport-encryption:
           - name: dropwizard
             type: KEYSTORE
@@ -89,13 +75,6 @@ pods:
                nginx
         cpus: 0.1
         memory: 256
-        health-check:
-          cmd: stat nginx.crt &> /dev/null
-          interval: 5
-          grace-period: 30
-          delay: 0
-          timeout: 10
-          max-consecutive-failures: 3
         transport-encryption:
           - name: nginx
             type: TLS
