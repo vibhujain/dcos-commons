@@ -26,9 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -115,7 +112,7 @@ public class DefaultService implements Service {
                                 .setRedirectStrategy(new LaxRedirectStrategy())
                                 .build());
                 secretsClient = Optional.of(new DefaultSecretsClient(executor));
-            } catch (NoSuchAlgorithmException | IOException | InvalidKeySpecException e) {
+            } catch (Exception e) {
                 LOGGER.error("Failed to create a secrets store client," +
                        "TLS artifacts possibly won't be cleaned up from secrets store");
                 LOGGER.error(String.valueOf(e));
