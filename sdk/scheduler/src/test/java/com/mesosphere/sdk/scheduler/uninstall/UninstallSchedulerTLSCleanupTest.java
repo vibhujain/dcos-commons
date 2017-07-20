@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -62,18 +63,34 @@ public class UninstallSchedulerTLSCleanupTest extends DefaultCapabilitiesTestSui
         uninstallScheduler.registered(mockSchedulerDriver, TestConstants.FRAMEWORK_ID, TestConstants.MASTER_INFO);
         Protos.Offer offer = OfferTestUtils.getOffer(Arrays.asList(RESERVED_RESOURCE_1));
         uninstallScheduler.resourceOffers(mockSchedulerDriver, Collections.singletonList(offer));
+        uninstallScheduler.awaitOffersProcessed();
 
         // Start the TLS cleanup phase
-        uninstallScheduler.resourceOffers(mockSchedulerDriver, Collections.emptyList());
+        uninstallScheduler.resourceOffers(mockSchedulerDriver, Arrays.asList(getOffer()));
+        uninstallScheduler.awaitOffersProcessed();
 
         verify(secretsClientMock, times(1))
                 .list(TestConstants.SERVICE_NAME);
 
         // Start final Deregister phase
-        uninstallScheduler.resourceOffers(mockSchedulerDriver, Collections.emptyList());
+        uninstallScheduler.resourceOffers(mockSchedulerDriver, Arrays.asList(getOffer()));
+        uninstallScheduler.awaitOffersProcessed();
+
         assert uninstallScheduler.uninstallPlanManager.getPlan().isComplete();
     }
 
+    private Protos.Offer getOffer() {
+        return getOffer(UUID.randomUUID().toString());
+    }
+
+    private Protos.Offer getOffer(String id) {
+        return Protos.Offer.newBuilder()
+                .setId(Protos.OfferID.newBuilder().setValue(id))
+                .setFrameworkId(TestConstants.FRAMEWORK_ID)
+                .setSlaveId(TestConstants.AGENT_ID)
+                .setHostname(TestConstants.HOSTNAME)
+                .build();
+    }
     /**
      * This is an unfortunate workaround for not being able to use a Spy on the UninstallScheduler instance.
      */
