@@ -139,7 +139,7 @@ func (cmd *TopicHandler) runProducerTest(a *kingpin.Application, e *kingpin.Pars
 	}
 	return nil
 }
-func (cmd *TopicHandler) runProducerTestTLS(c *kingpin.ParseContext) error {
+func (cmd *TopicHandler) runProducerTestTLS(a *kingpin.Application, e *kingpin.ParseElement, c *kingpin.ParseContext) error {
 	query := url.Values{}
 	query.Set("messages", strconv.FormatInt(int64(cmd.produceMessageCount), 10))
 	responseBytes, err := client.HTTPServicePutQuery(fmt.Sprintf("v1/topics/%s/operation/producer-test-tls", cmd.topic), query.Encode())
