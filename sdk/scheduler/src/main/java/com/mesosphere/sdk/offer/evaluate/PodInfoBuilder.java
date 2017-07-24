@@ -737,7 +737,7 @@ public class PodInfoBuilder {
         return volumes;
     }
 
-    private static String getDcosSpaceLabel() {
+    public static String getDcosSpaceLabel() {
         String labelString = System.getenv(DCOS_SPACE_LABEL);
         if (labelString == null) {
             labelString = System.getenv("MARATHON_APP_ID");
