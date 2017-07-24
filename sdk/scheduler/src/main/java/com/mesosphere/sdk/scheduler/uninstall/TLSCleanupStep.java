@@ -44,18 +44,16 @@ public class TLSCleanupStep extends AbstractStep {
         logger.info("Cleaning up TLS resources...");
 
         try {
-            Collection<String> pathsToClean = secretsClient.list(namespace);
+            Collection<String> secretsToCleanCandidates = secretsClient.list(namespace);
 
-            pathsToClean = pathsToClean
+            Collection<String> secretsPathsToClean = secretsToCleanCandidates
                     .stream()
                     .filter(secretPath -> pattern.matcher(secretPath).matches())
                     .collect(Collectors.toList());
 
-            if (pathsToClean.size() > 0) {
+            if (secretsPathsToClean.size() > 0) {
                 logger.info(String.format("Paths to clean: "));
-                pathsToClean.forEach(path -> logger.info(path));
-
-                for (String path : pathsToClean) {
+                for (String path : secretsPathsToClean) {
                     secretsClient.delete(namespace + "/" + path);
                     logger.info(String.format("Secret removed: '%s'", path));
                 }
@@ -86,7 +84,10 @@ public class TLSCleanupStep extends AbstractStep {
                 SecretNameGenerator.SECRET_NAME_TRUSTSTORE
         );
 
-        String regex = String.format("^.+/(?:%s)$", String.join("|", possibleSecretNames));
+        String regex = String.format("^.+%s(?:%s)$",
+                SecretNameGenerator.DELIMITER,
+                String.join("|", possibleSecretNames));
+
         return Pattern.compile(regex);
     }
 

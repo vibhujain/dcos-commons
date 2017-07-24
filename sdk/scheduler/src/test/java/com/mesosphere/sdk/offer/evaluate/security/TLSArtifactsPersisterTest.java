@@ -18,6 +18,7 @@ import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 
@@ -99,8 +100,10 @@ public class TLSArtifactsPersisterTest {
         TLSArtifactsPersister persister = new TLSArtifactsPersister(
                 secretsClientMock, "serviceName");
 
-        List<String> list = Arrays.asList(
-                "private-key", "certificate", "root-ca-certificate", "keystore", "truststore");
+        List<String> list = secretNameGenerator.getAllSecretPaths()
+                .stream()
+                .map(path -> path.substring(secretNameGenerator.getTaskSecretsNamespace().length() + 1))
+                .collect(Collectors.toList());
         when(secretsClientMock
                 .list(secretNameGenerator.getTaskSecretsNamespace()))
                 .thenReturn(list);
@@ -114,7 +117,10 @@ public class TLSArtifactsPersisterTest {
         TLSArtifactsPersister persister = new TLSArtifactsPersister(
                 secretsClientMock, "serviceName");
 
-        List<String> list = Arrays.asList( "certificate");
+        List<String> list = Arrays.asList(
+                secretNameGenerator
+                        .getCertificatePath()
+                        .substring(secretNameGenerator.getTaskSecretsNamespace().length() + 1));
         when(secretsClientMock
                 .list(secretNameGenerator.getTaskSecretsNamespace()))
                 .thenReturn(list);

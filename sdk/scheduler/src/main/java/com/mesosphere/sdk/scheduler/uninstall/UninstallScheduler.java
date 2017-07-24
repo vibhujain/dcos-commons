@@ -3,6 +3,7 @@ package com.mesosphere.sdk.scheduler.uninstall;
 import com.mesosphere.sdk.api.PlansResource;
 import com.mesosphere.sdk.dcos.SecretsClient;
 import com.mesosphere.sdk.offer.*;
+import com.mesosphere.sdk.offer.evaluate.PodInfoBuilder;
 import com.mesosphere.sdk.scheduler.AbstractScheduler;
 import com.mesosphere.sdk.scheduler.DefaultTaskKiller;
 import com.mesosphere.sdk.scheduler.SchedulerApiServer;
@@ -109,7 +110,12 @@ public class UninstallScheduler extends AbstractScheduler {
         phases.add(resourcePhase);
 
         if (secretsClient.isPresent()) {
-            Step tlsCleanupStep = new TLSCleanupStep(Status.PENDING, secretsClient.get(), serviceName);
+            String secretNamespace = PodInfoBuilder.getDcosSpaceLabel();
+            if (secretNamespace.equals("/")) {
+                secretNamespace = serviceName;
+            }
+
+            Step tlsCleanupStep = new TLSCleanupStep(Status.PENDING, secretsClient.get(), secretNamespace);
             List<Step> tlsCleanupSteps = Collections.singletonList(tlsCleanupStep);
             Phase tlsCleanupPhase = new DefaultPhase(TLS_CLEANUP_PHASE, tlsCleanupSteps, new SerialStrategy<>(),
                     Collections.emptyList());

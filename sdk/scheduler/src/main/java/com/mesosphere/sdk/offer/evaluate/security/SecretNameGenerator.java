@@ -19,6 +19,13 @@ public class SecretNameGenerator {
     public static final String SECRET_NAME_KEYSTORE = "keystore";
     public static final String SECRET_NAME_TRUSTSTORE = "truststore";
 
+    // Secrets service allows only limited set of characters in secret name. Here we're going to use the double
+    // underscore as a partial name delimiter. The "/" can't be used here as task doesn't have access to secrets
+    // nested to the current DCOS_SPACE.
+    // Secret path allowed characters: {secretPath:[A-Za-z0-9-/_]+}
+    // More info: https://docs.mesosphere.com/1.9/security/#serv-job
+    public static final String DELIMITER = "__";
+
     public SecretNameGenerator(String namespace, String podName, String taskName, String transportEncryptionName) {
         this.namespace = namespace;
         this.podName = podName;
@@ -27,7 +34,7 @@ public class SecretNameGenerator {
     }
 
     public String getTaskSecretsNamespace() {
-        return String.format("%s/%s/%s/%s", namespace, podName, taskName, transportEncryptionName);
+        return namespace;
     }
 
     public Collection<String> getAllSecretPaths() {
@@ -81,7 +88,8 @@ public class SecretNameGenerator {
     }
 
     private String getSecretPath(String name) {
-        return String.format("%s/%s", getTaskSecretsNamespace(), name);
+        String fullName = String.join(DELIMITER, podName, taskName, transportEncryptionName, name);
+        return String.format("%s/%s", getTaskSecretsNamespace(), fullName);
     }
 
     private String getMountPath(String suffix) {
