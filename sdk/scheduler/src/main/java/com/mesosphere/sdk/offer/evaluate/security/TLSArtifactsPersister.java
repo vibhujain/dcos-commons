@@ -12,9 +12,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -89,7 +89,7 @@ public class TLSArtifactsPersister {
                 .getAllSecretPaths()
                 .stream()
                 .map(secret -> secret.substring(namespaceLength + 1))
-                .collect(Collectors.toCollection(ArrayList<String>::new));
+                .collect(Collectors.toList());
 
         toProvision.removeAll(existing);
         return toProvision.size() == 0;
@@ -104,7 +104,16 @@ public class TLSArtifactsPersister {
     public void cleanUpSecrets(
             SecretNameGenerator secretNameGenerator) throws IOException, SecretsException {
         String namespace = secretNameGenerator.getTaskSecretsNamespace();
-        Collection<String> existing = secretsClient.list(namespace);
+        List<String> toDelete = secretNameGenerator
+                .getAllSecretPaths()
+                .stream()
+                .map(path -> path.substring(namespace.length() + 1))
+                .collect(Collectors.toList());
+
+        List<String> existing = secretsClient.list(namespace)
+                .stream()
+                .filter(path -> toDelete.contains(path))
+                .collect(Collectors.toList());
 
         for (String secretName : existing) {
             String secretPath = namespace + "/" + secretName;

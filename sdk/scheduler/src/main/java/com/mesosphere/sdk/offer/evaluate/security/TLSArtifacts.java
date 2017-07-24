@@ -3,7 +3,8 @@ package com.mesosphere.sdk.offer.evaluate.security;
 import java.security.KeyStore;
 
 /**
- * A {@link TLSArtifacts} is a container that holds various objects related to single TLS certificate.
+ * A {@link TLSArtifacts} is a container that holds various objects related to single private key and its X.509
+ * certificate.
  */
 public class TLSArtifacts {
 
