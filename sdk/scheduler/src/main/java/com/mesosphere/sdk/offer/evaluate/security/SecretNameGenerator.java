@@ -1,5 +1,7 @@
 package com.mesosphere.sdk.offer.evaluate.security;
 
+import com.mesosphere.sdk.offer.evaluate.PodInfoBuilder;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -88,7 +90,8 @@ public class SecretNameGenerator {
     }
 
     private String getSecretPath(String name) {
-        String fullName = String.join(DELIMITER, podName, taskName, transportEncryptionName, name);
+        String taskInstanceName = podName + "-" + taskName;
+        String fullName = String.join(DELIMITER, taskInstanceName, transportEncryptionName, name);
         return String.format("%s/%s", getTaskSecretsNamespace(), fullName);
     }
 
@@ -100,5 +103,19 @@ public class SecretNameGenerator {
     // @see DCOS-16005
     private String withBase64Suffix(String path) {
         return path + ".base64";
+    }
+
+    public static String getNamespaceFromEnvironment(String defaultNamespace) {
+        String secretNamespace = PodInfoBuilder.getDcosSpaceLabel();
+
+        if (secretNamespace.startsWith("/")) {
+            secretNamespace = secretNamespace.substring(1);
+        }
+
+        if (secretNamespace.isEmpty()) {
+            secretNamespace = defaultNamespace;
+        }
+
+        return secretNamespace;
     }
 }

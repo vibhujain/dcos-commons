@@ -124,16 +124,8 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
             PodInfoBuilder podInfoBuilder,
             String transportEncryptionName) {
         // Provision secrets within DCOS_SPACE namespace so the tasks will be authorized to use secrets.
-        String secretNamespace = PodInfoBuilder.getDcosSpaceLabel();
-        if (secretNamespace.startsWith("/")) {
-            secretNamespace = secretNamespace.substring(1);
-        }
-        if (secretNamespace.isEmpty()) {
-            secretNamespace = serviceName;
-        }
-
         return new SecretNameGenerator(
-                secretNamespace,
+                SecretNameGenerator.getNamespaceFromEnvironment(serviceName),
                 podInfoBuilder.getPodInstance().getName(),
                 taskName,
                 transportEncryptionName);

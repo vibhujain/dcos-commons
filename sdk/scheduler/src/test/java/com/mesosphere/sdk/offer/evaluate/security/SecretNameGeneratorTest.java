@@ -19,27 +19,27 @@ public class SecretNameGeneratorTest {
 
     @Test
     public void getCertificatePath() throws Exception {
-        Assert.assertEquals(DEFAULT_GENERATOR.getCertificatePath(), "service/pod__task__exposed__certificate");
+        Assert.assertEquals(DEFAULT_GENERATOR.getCertificatePath(), "service/pod-task__exposed__certificate");
     }
 
     @Test
     public void getPrivateKeyPath() throws Exception {
-        Assert.assertEquals(DEFAULT_GENERATOR.getPrivateKeyPath(), "service/pod__task__exposed__private-key");
+        Assert.assertEquals(DEFAULT_GENERATOR.getPrivateKeyPath(), "service/pod-task__exposed__private-key");
     }
 
     @Test
     public void getRootCACertPath() throws Exception {
-        Assert.assertEquals(DEFAULT_GENERATOR.getRootCACertPath(), "service/pod__task__exposed__root-ca-certificate");
+        Assert.assertEquals(DEFAULT_GENERATOR.getRootCACertPath(), "service/pod-task__exposed__root-ca-certificate");
     }
 
     @Test
     public void getKeyStorePath() throws Exception {
-        Assert.assertEquals(DEFAULT_GENERATOR.getKeyStorePath(), "service/pod__task__exposed__keystore");
+        Assert.assertEquals(DEFAULT_GENERATOR.getKeyStorePath(), "service/pod-task__exposed__keystore");
     }
 
     @Test
     public void getTrustStorePath() throws Exception {
-        Assert.assertEquals(DEFAULT_GENERATOR.getTrustStorePath(), "service/pod__task__exposed__truststore");
+        Assert.assertEquals(DEFAULT_GENERATOR.getTrustStorePath(), "service/pod-task__exposed__truststore");
     }
 
     @Test
