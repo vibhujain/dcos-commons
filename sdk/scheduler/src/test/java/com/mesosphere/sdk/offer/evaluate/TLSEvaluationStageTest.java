@@ -101,7 +101,9 @@ public class TLSEvaluationStageTest {
                 TestConstants.SERVICE_NAME,
                 UUID.randomUUID(),
                 OfferRequirementTestUtils.getTestSchedulerFlags(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                TestConstants.FRAMEWORK_ID,
+                true);
 
         return podInfoBuilder;
     }
@@ -139,12 +141,18 @@ public class TLSEvaluationStageTest {
         verify(tlsArtifactsPersisterMock, times(1))
                 .persist(Matchers.any(), Matchers.any());
 
-        Protos.ContainerInfo container = podInfoBuilder
+        Protos.ContainerInfo executorContainer = podInfoBuilder
                 .getTaskBuilder(TestConstants.TASK_NAME)
                 .getExecutor()
                 .getContainer();
 
-        assertTLSArtifacts(container, secretNameGenerator);
+        assertTLSArtifacts(executorContainer, secretNameGenerator);
+
+        Protos.ContainerInfo taskContainer = podInfoBuilder
+                .getTaskBuilder(TestConstants.TASK_NAME)
+                .getContainer();
+
+        assertTLSArtifacts(taskContainer, secretNameGenerator);
     }
 
     @Test
@@ -180,12 +188,18 @@ public class TLSEvaluationStageTest {
         verify(tlsArtifactsPersisterMock, times(1))
                 .persist(Matchers.any(), Matchers.any());
 
-        Protos.ContainerInfo container = podInfoBuilder
+        Protos.ContainerInfo executorContainer = podInfoBuilder
                 .getTaskBuilder(TestConstants.TASK_NAME)
                 .getExecutor()
                 .getContainer();
 
-        assertKeystoreArtifacts(container, secretNameGenerator);
+        assertKeystoreArtifacts(executorContainer, secretNameGenerator);
+
+        Protos.ContainerInfo taskContainer = podInfoBuilder
+                .getTaskBuilder(TestConstants.TASK_NAME)
+                .getContainer();
+
+        assertKeystoreArtifacts(taskContainer, secretNameGenerator);
     }
 
     @Test
@@ -224,12 +238,18 @@ public class TLSEvaluationStageTest {
         verify(tlsArtifactsPersisterMock, never())
                 .persist(Matchers.any(), Matchers.any());
 
-        Protos.ContainerInfo container = podInfoBuilder
+        Protos.ContainerInfo executorContainer = podInfoBuilder
                 .getTaskBuilder(TestConstants.TASK_NAME)
                 .getExecutor()
                 .getContainer();
 
-        assertTLSArtifacts(container, secretNameGenerator);
+        assertTLSArtifacts(executorContainer, secretNameGenerator);
+
+        Protos.ContainerInfo taskContainer = podInfoBuilder
+                .getTaskBuilder(TestConstants.TASK_NAME)
+                .getContainer();
+
+        assertTLSArtifacts(taskContainer, secretNameGenerator);
     }
 
     @Test

@@ -8,6 +8,7 @@ pods:
     count: {{HELLO_COUNT}}
     user: {{SERVICE_USER}}
     uris:
+      - {{JAVA_URI}}
       - {{BOOTSTRAP_URI}}
     tasks:
       node:
@@ -33,6 +34,7 @@ pods:
     networks:
       dcos:
     uris:
+      - {{JAVA_URI}}
       - {{BOOTSTRAP_URI}}
       - https://s3-us-west-2.amazonaws.com/infinity-artifacts/testing/tls/keystore-app-{{KEYSTORE_APP_VERSION}}.zip
     tasks:

@@ -71,20 +71,7 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         for (TransportEncryptionSpec transportEncryptionSpec : taskSpec.getTransportEncryption()) {
             String transportEncryptionName = transportEncryptionSpec.getName();
 
-            // Provision secrets within DCOS_SPACE namespace so the tasks will be authorized to use secrets.
-            String secretNamespace = PodInfoBuilder.getDcosSpaceLabel();
-            if (secretNamespace.startsWith("/")) {
-                secretNamespace = secretNamespace.substring(1);
-            }
-            if (secretNamespace.isEmpty()) {
-                secretNamespace = serviceName;
-            }
-
-            SecretNameGenerator secretNameGenerator = new SecretNameGenerator(
-                    secretNamespace,
-                    podInfoBuilder.getPodInstance().getName(),
-                    taskName,
-                    transportEncryptionName);
+            SecretNameGenerator secretNameGenerator = getSecretNameGenerator(podInfoBuilder, transportEncryptionName);
 
             try {
                 if (!tlsArtifactsPersister.isArtifactComplete(secretNameGenerator)) {
@@ -108,15 +95,22 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
             Collection<Protos.Volume> volumes = getExecutorInfoSecretVolumes(
                     transportEncryptionSpec, secretNameGenerator);
 
-            // Share keys to the container
+            // Share keys to the task container
+            podInfoBuilder
+                    .getTaskBuilder(taskName)
+                    .getContainerBuilder()
+                    .addAllVolumes(volumes);
+
+            // TODO(mh): Do we need to share secrets to the executor container as well?
             Optional<Protos.ExecutorInfo.Builder> executorBuilder = podInfoBuilder.getExecutorBuilder();
-            Protos.TaskInfo.Builder taskBuilder = podInfoBuilder.getTaskBuilder(taskName);
             if (executorBuilder.isPresent()) {
                 executorBuilder.get()
                         .getContainerBuilder()
                         .setType(Protos.ContainerInfo.Type.MESOS)
                         .addAllVolumes(volumes);
-                taskBuilder.setExecutor(executorBuilder.get());
+                podInfoBuilder
+                        .getTaskBuilder(taskName)
+                        .setExecutor(executorBuilder.get());
             }
         }
 
@@ -124,6 +118,25 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
                 this, "TLS certificate created and added to the task")
                 .build();
 
+    }
+
+    private SecretNameGenerator getSecretNameGenerator(
+            PodInfoBuilder podInfoBuilder,
+            String transportEncryptionName) {
+        // Provision secrets within DCOS_SPACE namespace so the tasks will be authorized to use secrets.
+        String secretNamespace = PodInfoBuilder.getDcosSpaceLabel();
+        if (secretNamespace.startsWith("/")) {
+            secretNamespace = secretNamespace.substring(1);
+        }
+        if (secretNamespace.isEmpty()) {
+            secretNamespace = serviceName;
+        }
+
+        return new SecretNameGenerator(
+                secretNamespace,
+                podInfoBuilder.getPodInstance().getName(),
+                taskName,
+                transportEncryptionName);
     }
 
     private TaskSpec findTaskSpec(PodInfoBuilder podInfoBuilder) {

@@ -139,7 +139,8 @@ def hello_world_service(service_account):
     install.uninstall(PACKAGE_NAME)
 
     # Make sure that all the TLS artifacts were removed from the secrets store.
-    output = cmd.run_cli('security secret list {name}'.format(PACKAGE_NAME))
+    output = cmd.run_cli('security secrets list {name}'.format(
+        name=PACKAGE_NAME))
     artifact_suffixes = [
         'certificate', 'private-key', 'root-ca-certificate',
         'keystore', 'truststore'
@@ -193,10 +194,11 @@ def test_tls_basic_artifacts(hello_world_service):
     # Check that certificate subject maches the service name
     common_name = end_entity_cert.subject.get_attributes_for_oid(
         NameOID.COMMON_NAME)[0].value
-    assert common_name == hosts.autoip_host(PACKAGE_NAME, task_id)
+    assert common_name == hosts.autoip_host(PACKAGE_NAME, 'artifacts-0-node')
 
-    sans = end_entity_cert.extensions.get_extension_for_oid(
+    san_extension = end_entity_cert.extensions.get_extension_for_oid(
         ExtensionOID.SUBJECT_ALTERNATIVE_NAME)
+    sans = san_extension.value._general_names._general_names
     assert len(sans) == 3
 
     cluster_root_ca_cert = x509.load_pem_x509_certificate(
@@ -221,6 +223,7 @@ def test_java_keystore(hello_world_service):
     # and make sure that mesos curl can verify certificate served by app
     curl = (
         'curl -v -i '
+        '--cacert secure-tls-pod.ca '
         'https://' + hosts.vip_host(
             PACKAGE_NAME, KEYSTORE_TASK_HTTPS_PORT_NAME) + '/hello-world'
         )
@@ -230,7 +233,7 @@ def test_java_keystore(hello_world_service):
     # that curl with pre-configured cert was used and that task was matched
     # by SAN in certificate.
     assert 'HTTP/1.1 200 OK' in output
-    assert 'CAfile: /opt/mesosphere/active/python-requests/lib/python3.5/site-packages/requests/cacert.pem' in output
+    assert 'CAfile: secure-tls-pod.ca' in output
     assert 'host "keystore-https.hello-world.l4lb.thisdcos.directory" matched cert\'s "*.hello-world.l4lb.thisdcos.directory"' in output
 
 
