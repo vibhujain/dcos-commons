@@ -6,7 +6,6 @@ pods:
   # Exposes basic TLS artifacts in a container
   artifacts:
     count: {{HELLO_COUNT}}
-    user: {{SERVICE_USER}}
     uris:
       - {{JAVA_URI}}
       - {{BOOTSTRAP_URI}}
@@ -30,7 +29,6 @@ pods:
   # Runs a webservice over TLS using keystore
   keystore:
     count: {{HELLO_COUNT}}
-    user: {{SERVICE_USER}}
     networks:
       dcos:
     uris:
