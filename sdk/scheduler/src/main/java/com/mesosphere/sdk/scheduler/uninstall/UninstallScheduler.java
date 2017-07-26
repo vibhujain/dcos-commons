@@ -3,7 +3,6 @@ package com.mesosphere.sdk.scheduler.uninstall;
 import com.mesosphere.sdk.api.PlansResource;
 import com.mesosphere.sdk.dcos.SecretsClient;
 import com.mesosphere.sdk.offer.*;
-import com.mesosphere.sdk.offer.evaluate.PodInfoBuilder;
 import com.mesosphere.sdk.offer.evaluate.security.SecretNameGenerator;
 import com.mesosphere.sdk.scheduler.AbstractScheduler;
 import com.mesosphere.sdk.scheduler.DefaultTaskKiller;

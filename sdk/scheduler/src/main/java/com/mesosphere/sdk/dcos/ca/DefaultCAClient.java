@@ -103,8 +103,11 @@ public class DefaultCAClient implements CertificateAuthorityClient {
 
         if (bundle.length() > 0) {
             certificates.addAll(
-                    (Collection<? extends X509Certificate>) certificateFactory.generateCertificates(
+                    certificateFactory.generateCertificates(
                             new ByteArrayInputStream(bundle.getBytes(StandardCharsets.UTF_8)))
+                        .stream()
+                        .map(cert -> (X509Certificate) cert)
+                        .collect(Collectors.toList())
             );
             // Bundle response includes also submitted certificate which we don't need
             // so remove it.
