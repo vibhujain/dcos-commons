@@ -1,9 +1,8 @@
 package com.mesosphere.sdk.scheduler.uninstall;
 
-import com.mesosphere.sdk.config.ConfigStore;
 import com.mesosphere.sdk.dcos.SecretsClient;
 import com.mesosphere.sdk.specification.ServiceSpec;
-import com.mesosphere.sdk.state.DefaultStateStore;
+import com.mesosphere.sdk.state.ConfigStore;
 import com.mesosphere.sdk.state.StateStore;
 import com.mesosphere.sdk.storage.MemPersister;
 import com.mesosphere.sdk.testutils.*;
@@ -42,7 +41,7 @@ public class UninstallSchedulerTLSCleanupTest extends DefaultCapabilitiesTestSui
     @Before
     public void beforeEach() throws Exception {
         MockitoAnnotations.initMocks(this);
-        stateStore = new DefaultStateStore(new MemPersister());
+        stateStore = new StateStore(new MemPersister());
         stateStore.storeTasks(Collections.singletonList(TASK_A));
         stateStore.storeFrameworkId(TestConstants.FRAMEWORK_ID);
         uninstallScheduler = new TestScheduler(
