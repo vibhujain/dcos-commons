@@ -605,7 +605,7 @@ public class DefaultScheduler extends AbstractScheduler implements Observer {
                         serviceSpec.getName(),
                         configStore.getTargetConfig(),
                         schedulerFlags,
-                        Capabilities.getInstance().supportsDefaultExecutor()),
+                        false /*Capabilities.getInstance().supportsDefaultExecutor()*/),
                 stateStore,
                 taskKiller);
     }
