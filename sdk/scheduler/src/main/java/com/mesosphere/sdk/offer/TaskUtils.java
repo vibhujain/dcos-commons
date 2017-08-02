@@ -8,9 +8,8 @@ import com.mesosphere.sdk.specification.*;
 import com.mesosphere.sdk.state.ConfigStore;
 import com.mesosphere.sdk.state.ConfigStoreException;
 import com.mesosphere.sdk.state.StateStore;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.mesos.Protos;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
@@ -225,25 +224,7 @@ public class TaskUtils {
     }
 
     private static boolean areDifferent(ResourceSpec oldResourceSpec, ResourceSpec newResourceSpec) {
-        Protos.Value oldValue = oldResourceSpec.getValue();
-        Protos.Value newValue = newResourceSpec.getValue();
-        if (!ValueUtils.equal(oldValue, newValue)) {
-            return true;
-        }
-
-        String oldRole = oldResourceSpec.getRole();
-        String newRole = newResourceSpec.getRole();
-        if (!Objects.equals(oldRole, newRole)) {
-            return true;
-        }
-
-        String oldPrincipal = oldResourceSpec.getPrincipal();
-        String newPrincipal = newResourceSpec.getPrincipal();
-        if (!Objects.equals(oldPrincipal, newPrincipal)) {
-            return true;
-        }
-
-        return false;
+        return !EqualsBuilder.reflectionEquals(oldResourceSpec, newResourceSpec);
     }
 
     /**
