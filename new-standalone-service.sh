@@ -71,7 +71,7 @@ export BUILD_BOOTSTRAP=no
 export TOOLS_DIR=${FRAMEWORK_DIR}/tools
 export CLI_DIR=${FRAMEWORK_DIR}/cli
 export ORG_PATH=github.com/$REPO_NAME
-${FRAMEWORK_DIR}/tools/build_framework.sh $PUBLISH_STEP $REPO_NAME $FRAMEWORK_DIR $BUILD_DIR/$REPO_NAME-scheduler.zip
+${FRAMEWORK_DIR}/tools/build_framework.sh $REPO_NAME $FRAMEWORK_DIR $PUBLISH_STEP
 EOF
 chmod +x $PROJECT_PATH/$PROJECT_NAME/build.sh
 
