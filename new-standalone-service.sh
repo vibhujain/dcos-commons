@@ -50,9 +50,9 @@ fi
 debug "Scaffolding $PROJECT_NAME from template"
 
 cp -R $THIS_DIR/frameworks/template $PROJECT_PATH/$PROJECT_NAME
-cp -R tools $PROJECT_PATH/$PROJECT_NAME/tools
-cp -R testing $PROJECT_PATH/$PROJECT_NAME/testing
-cp ./.gitignore $PROJECT_PATH/$PROJECT_NAME
+cp -R $THIS_DIR/tools $PROJECT_PATH/$PROJECT_NAME/tools
+cp -R $THIS_DIR/testing $PROJECT_PATH/$PROJECT_NAME/testing
+cp $THIS_DIR/./.gitignore $PROJECT_PATH/$PROJECT_NAME
 rm -rf $PROJECT_PATH/$PROJECT_NAME/build
 rm -rf $PROJECT_PATH/$PROJECT_NAME/cli/dcos-*/*.whl
 rm -rf $PROJECT_PATH/$PROJECT_NAME/cli/dcos-*/dcos-*
