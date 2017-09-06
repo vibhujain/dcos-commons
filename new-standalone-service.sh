@@ -3,7 +3,7 @@
 set -e
 
 CLEANUP_PATH=`pwd`
-VERSION="0.15.0"
+VERSION="0.30.0"
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cleanup() {
