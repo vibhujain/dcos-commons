@@ -123,7 +123,7 @@ sed -i.bak '/distZip.dependsOn ":executor:distZip"/d' $PROJECT_PATH/$PROJECT_NAM
 sed -i.bak '/distZip.finalizedBy copyExecutor/d' $PROJECT_PATH/$PROJECT_NAME/build.gradle
 rm -f $PROJECT_PATH/$PROJECT_NAME/build.gradle.bak
 
-GRADLEW=$(pwd)/gradlew
+GRADLEW=$THIS_DIR/gradlew
 
 pushd $PROJECT_PATH/$PROJECT_NAME
 $GRADLEW wrapper --gradle-version 3.4.1
