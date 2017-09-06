@@ -4,6 +4,7 @@ set -e
 
 CLEANUP_PATH=`pwd`
 VERSION="0.15.0"
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cleanup() {
     debug "Cleaning up"
@@ -48,7 +49,7 @@ fi
 
 debug "Scaffolding $PROJECT_NAME from template"
 
-cp -R frameworks/template $PROJECT_PATH/$PROJECT_NAME
+cp -R $THIS_DIR/frameworks/template $PROJECT_PATH/$PROJECT_NAME
 cp -R tools $PROJECT_PATH/$PROJECT_NAME/tools
 cp -R testing $PROJECT_PATH/$PROJECT_NAME/testing
 cp ./.gitignore $PROJECT_PATH/$PROJECT_NAME
