@@ -12,6 +12,8 @@ import java.util.List;
  * its observers when this state changes.
  */
 public interface PlanCoordinator {
+    List<Step> getCandidates();
+
     /**
      * Provides offers to each {@link PlanManager} for processing. Keeps tracks of dirtied offers and assets.
      *

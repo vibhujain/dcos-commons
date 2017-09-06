@@ -20,6 +20,7 @@ public class DefaultPlanCoordinator implements PlanCoordinator {
 
     private final List<PlanManager> planManagers = new LinkedList<>();
     private final PlanScheduler planScheduler;
+    private final Set<String> addressedCandidates = new HashSet<>();
 
     public DefaultPlanCoordinator(
             List<PlanManager> planManagers,
@@ -32,17 +33,9 @@ public class DefaultPlanCoordinator implements PlanCoordinator {
     }
 
     @Override
-    public Collection<OfferID> processOffers(
-            final SchedulerDriver driver,
-            final List<Offer> offersToProcess) {
-        // Offers that have already been used
-        final Set<OfferID> dirtiedOffers = new HashSet<>();
-
+    public List<Step> getCandidates() {
         // Assets that are being actively worked on
         final Set<PodInstanceRequirement> dirtiedAssets = new HashSet<>();
-
-        // Offers that are available for scheduling (copy original list to allow modification below)
-        final List<Offer> offers = new ArrayList<>(offersToProcess);
 
         // Pro-actively determine all known dirty assets. This is used to ensure that PlanManagers that are presented
         // with offers first, does not accidentally schedule an asset that's actively being worked upon by another
@@ -54,6 +47,7 @@ public class DefaultPlanCoordinator implements PlanCoordinator {
 
         LOGGER.info("Initial dirtied assets: {}", dirtiedAssets);
 
+        List<Step> candidateSteps = new ArrayList<>();
         for (final PlanManager planManager : getPlanManagers()) {
             if (planManager.getPlan().isInterrupted()) {
                 LOGGER.info("Skipping interrupted plan: {}", planManager.getPlan().getName());
@@ -63,21 +57,11 @@ public class DefaultPlanCoordinator implements PlanCoordinator {
             try {
                 Collection<PodInstanceRequirement> relevantDirtyAssets =
                         getRelevantDirtyAssets(planManager, dirtiedAssets);
-                LOGGER.info("Processing offers for plan: '{}' with relevant dirtied assets: {}.",
+                LOGGER.info("Getting candidates for plan: '{}' with relevant dirtied assets: {}.",
                         planManager.getPlan().getName(), relevantDirtyAssets);
 
                 // Get candidate steps to be scheduled
-                Collection<? extends Step> candidateSteps = planManager.getCandidates(relevantDirtyAssets);
-                LOGGER.info("Attempting to process candidates: {}, from plan: {}",
-                        candidateSteps.stream().map(step -> step.getName()).collect(Collectors.toList()),
-                        planManager.getPlan().getName());
-
-                // Try scheduling candidate steps using the available offers
-                Collection<OfferID> usedOffers = planScheduler.resourceOffers(driver, offers, candidateSteps);
-
-                // Collect dirtied offers
-                dirtiedOffers.addAll(usedOffers);
-                LOGGER.info("Updated dirtied offers: {}", dirtiedOffers);
+                candidateSteps.addAll(planManager.getCandidates(relevantDirtyAssets));
 
                 // Collect known dirtied assets
                 dirtiedAssets.addAll(planManager.getDirtyAssets());
@@ -85,8 +69,31 @@ public class DefaultPlanCoordinator implements PlanCoordinator {
             } catch (Throwable t) {
                 LOGGER.error(String.format("Error with plan manager: %s.", planManager), t);
             }
+        }
 
-            // Filter out dirtied offers, and only present unused offers to the next PlanManager.
+        LOGGER.info("Candidate steps: {}", candidateSteps);
+        return candidateSteps;
+    }
+
+    @Override
+    public synchronized Collection<OfferID> processOffers(
+            final SchedulerDriver driver,
+            final List<Offer> offersToProcess) {
+        // Offers that have already been used
+        final Set<OfferID> dirtiedOffers = new HashSet<>();
+
+        // Offers that are available for scheduling (copy original list to allow modification below)
+        final List<Offer> offers = new ArrayList<>(offersToProcess);
+
+        List<Step> candidates = getCandidates();
+        for (Step step : candidates) {
+            // Try scheduling candidate steps using the available offers
+            Collection<OfferID> usedOffers = planScheduler.resourceOffers(driver, offers, candidates);
+
+            // Collect dirtied offers
+            dirtiedOffers.addAll(usedOffers);
+            LOGGER.info("Updated dirtied offers: {}", dirtiedOffers);
+
             final List<Offer> unacceptedOffers = PlanUtils.filterAcceptedOffers(offers, dirtiedOffers);
             offers.clear();
             offers.addAll(unacceptedOffers);
