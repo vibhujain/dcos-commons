@@ -58,16 +58,16 @@ def install(
         wait_for_deployment=True):
     test_options={
         "master_nodes": {
-            "cpus": 0.25
+            "cpus": 0.5
         },
         "data_nodes": {
-            "cpus": 0.25
+            "cpus": 0.5
         },
         "ingest_nodes": {
-            "cpus": 0.25
+            "cpus": 0.5
         },
         "coordinator_nodes": {
-            "cpus": 0.25
+            "cpus": 0.5
         }
     }
 

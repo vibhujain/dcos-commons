@@ -5,7 +5,6 @@ import sdk_cmd as cmd
 import sdk_install
 import sdk_marathon
 import sdk_tasks
-import sdk_utils
 from tests import config
 
 
