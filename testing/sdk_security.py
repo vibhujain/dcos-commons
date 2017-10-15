@@ -186,7 +186,7 @@ def delete_service_account(service_account_name: str, service_account_secret: st
             pass
 
 
-def setup_security(framework_name: str) -> None:
+def setup_security(framework_name: str, extra_role_permissions: list = []) -> None:
     log.info('Setting up strict-mode security')
     create_service_account(service_account_name='service-acct', service_account_secret='secret')
     grant_permissions(
@@ -209,6 +209,14 @@ def setup_security(framework_name: str) -> None:
         role_name='test__integration__{}-role'.format(framework_name),
         service_account_name='service-acct'
     )
+
+    for item in extra_role_permissions:
+        grant_permissions(
+            linux_user=item['linux_user'],
+            role_name=item['role_name'],
+            service_account_name='service-acct'
+        )
+
     log.info('Finished setting up strict-mode security')
 
 
@@ -228,10 +236,17 @@ def cleanup_security(framework_name: str) -> None:
     # log.info('Finished cleaning up strict-mode security')
 
 
-def security_session(framework_name: str) -> None:
+def security_session(framework_name: str, extra_role_permissions: list = []) -> None:
     """Create a service account and configure permissions for strict-mode tests.
 
     This should generally be used as a fixture in a framework's conftest.py:
+
+    Additional framework specific permissions can be supplied in the extra_role_permissions list.
+    They should have the form:
+    {
+      'linux_user': <user>,
+      'role_name': role
+    }
 
     @pytest.fixture(scope='session')
     def configure_security(configure_universe):
@@ -240,7 +255,7 @@ def security_session(framework_name: str) -> None:
     try:
         security_mode = os.environ.get('SECURITY')
         if security_mode == 'strict':
-            setup_security(framework_name)
+            setup_security(framework_name, extra_role_permissions)
         yield
     finally:
         if security_mode == 'strict':
