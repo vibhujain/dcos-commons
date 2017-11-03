@@ -10,12 +10,7 @@ pods:
       - {{HDFS_BIN_URI}}
       - {{HDFS_JAVA_URI}}
       - {{BOOTSTRAP_URI}}
-    {{#KERBEROS_ENABLED}}
-    secrets:
-      keytab:
-        secret: {{KEYTAB_SECRET_PATH}}
-        file: hdfs.keytab
-    {{/KERBEROS_ENABLED}}
+      {{#KEYTABS_URI}}- {{KEYTABS_URI}}{{/KEYTABS_URI}}
     {{#ENABLE_VIRTUAL_NETWORK}}
     networks:
       {{VIRTUAL_NETWORK_NAME}}:
@@ -57,11 +52,11 @@ pods:
               ./bootstrap && ./{{HDFS_VERSION}}/bin/hdfs journalnode
         resource-set: journal-resources
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -113,12 +108,7 @@ pods:
       - {{HDFS_BIN_URI}}
       - {{HDFS_JAVA_URI}}
       - {{BOOTSTRAP_URI}}
-    {{#KERBEROS_ENABLED}}
-    secrets:
-      keytab:
-        secret: {{KEYTAB_SECRET_PATH}}
-        file: hdfs.keytab
-    {{/KERBEROS_ENABLED}}
+      {{#KEYTABS_URI}}- {{KEYTABS_URI}}{{/KEYTABS_URI}}
     {{#ENABLE_VIRTUAL_NETWORK}}
     networks:
       {{VIRTUAL_NETWORK_NAME}}:
@@ -156,21 +146,16 @@ pods:
               ./bootstrap && ./{{HDFS_VERSION}}/bin/hdfs namenode
         resource-set: name-resources
         readiness-check:
-          cmd: >
-            export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) &&
-          {{#KERBEROS_ENABLED}}
-            KRB5_CONFIG={{JRE_VERSION}}/lib/security/krb5.conf kinit -k -t $MESOS_SANDBOX/hdfs.keytab $KERBEROS_PRIMARY/$TASK_NAME.$FRAMEWORK_HOST@$KERBEROS_REALM &&
-          {{/KERBEROS_ENABLED}}
-            ./{{HDFS_VERSION}}/bin/hdfs haadmin -getServiceState $TASK_NAME
+          cmd: export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) && ./{{HDFS_VERSION}}/bin/hdfs haadmin -getServiceState name-$POD_INSTANCE_INDEX-node
           interval: 5
           delay: 0
           timeout: 60
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -203,11 +188,11 @@ pods:
               ./bootstrap && ./{{HDFS_VERSION}}/bin/hdfs namenode -format
         resource-set: name-resources
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -232,11 +217,11 @@ pods:
               ./bootstrap && ./{{HDFS_VERSION}}/bin/hdfs namenode -bootstrapStandby -skipSharedEditsCheck
         resource-set: name-resources
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -263,14 +248,14 @@ pods:
         cmd: >
               export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) ;
               mv hdfs {{HDFS_VERSION}}/bin/ ;
-              ./bootstrap --resolve-hosts $TASK_NAME.$FRAMEWORK_HOST && ./{{HDFS_VERSION}}/bin/hdfs zkfc
+              ./bootstrap --resolve-hosts name-$POD_INSTANCE_INDEX-node.$FRAMEWORK_HOST && ./{{HDFS_VERSION}}/bin/hdfs zkfc
         resource-set: zkfc-resources
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -295,11 +280,11 @@ pods:
               ./bootstrap && ./{{HDFS_VERSION}}/bin/hdfs zkfc -formatZK
         resource-set: zkfc-resources
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -323,12 +308,7 @@ pods:
       - {{HDFS_BIN_URI}}
       - {{HDFS_JAVA_URI}}
       - {{BOOTSTRAP_URI}}
-    {{#KERBEROS_ENABLED}}
-    secrets:
-      keytab:
-        secret: {{KEYTAB_SECRET_PATH}}
-        file: hdfs.keytab
-    {{/KERBEROS_ENABLED}}
+      {{#KEYTABS_URI}}- {{KEYTABS_URI}}{{/KEYTABS_URI}}
     {{#ENABLE_VIRTUAL_NETWORK}}
     networks:
       {{VIRTUAL_NETWORK_NAME}}:
@@ -359,11 +339,11 @@ pods:
           size: {{DATA_DISK}}
           type: {{DATA_DISK_TYPE}}
         configs:
-          {{#KERBEROS_ENABLED}}
+          {{#KRB5_CONF_URI}}
           krb5-conf:
-            template: krb5.conf
+            template: {{MESOS_SANDBOX}}/krb5.conf
             dest: {{JRE_VERSION}}/lib/security/krb5.conf
-          {{/KERBEROS_ENABLED}}
+          {{/KRB5_CONF_URI}}
           core-site:
             template: core-site.xml
             dest: {{HDFS_VERSION}}/etc/hadoop/core-site.xml
@@ -381,14 +361,9 @@ pods:
         env:
           DATANODE: true
         # If HDFS does not report a data node to be live, we don't consider the data node to be ready yet
+        # TODO: LIBPROCESS_IP gets overriden to 0.0.0.0 in overlay networking so this readiness-check needs to be fixed
         readiness-check:
-          cmd: >
-            export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) &&
-          {{#KERBEROS_ENABLED}}
-            KRB5_CONFIG={{JRE_VERSION}}/lib/security/krb5.conf kinit -k -t $MESOS_SANDBOX/hdfs.keytab $KERBEROS_PRIMARY/$TASK_NAME.$FRAMEWORK_HOST@$KERBEROS_REALM &&
-          {{/KERBEROS_ENABLED}}
-            export TASK_IP=$(./bootstrap --get-task-ip) && MATCH="$(./{{HDFS_VERSION}}/bin/hdfs dfsadmin -report | grep $TASK_IP | wc -l)" &&
-            [[ $MATCH -ge 1 ]]
+          cmd: export JAVA_HOME=$(ls -d $MESOS_SANDBOX/jre*/) && export TASK_IP=$(./bootstrap --get-task-ip) && MATCH="$(./{{HDFS_VERSION}}/bin/hdfs dfsadmin -report | grep $TASK_IP | wc -l)" && [[ $MATCH -ge 1 ]]
           interval: 10
           delay: 120
           timeout: 60
