@@ -177,7 +177,8 @@ def verify_commercial_api_status(is_enabled, service_name=SERVICE_NAME):
     if is_enabled:
         assert response["failures"] == []
     else:
-        # The _graph endpoint doesn't even exist without X-Pack installed
+        # The _graph endpoint doesn't exist without X-Pack installed so Elasticsearch understands it as a request to a
+        # missing index, hence the 400 response status.
         assert response["status"] == 400
 
 
