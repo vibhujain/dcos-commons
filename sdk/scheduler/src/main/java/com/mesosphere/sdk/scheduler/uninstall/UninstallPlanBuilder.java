@@ -51,7 +51,7 @@ class UninstallPlanBuilder {
 
     private final List<Step> taskKillSteps;
     private final List<Step> resourceSteps;
-    private final Optional<DeregisterStep> deregisterStep;
+    private final DeregisterStep deregisterStep;
     private final Plan plan;
 
     UninstallPlanBuilder(
@@ -59,7 +59,9 @@ class UninstallPlanBuilder {
             StateStore stateStore,
             ConfigStore<ServiceSpec> configStore,
             SchedulerConfig schedulerConfig,
+            SchedulerDriver driver,
             Optional<SecretsClient> customSecretsClientForTests) {
+        this.deregisterStep = new DeregisterStep(stateStore, driver);
         this.taskKiller = new DefaultTaskKiller(new DefaultTaskFailureListener(stateStore, configStore));
 
         // If there is no framework ID, wipe ZK and produce an empty COMPLETE plan
@@ -70,7 +72,6 @@ class UninstallPlanBuilder {
             // Fill values with stubs, and use an empty COMPLETE plan:
             taskKillSteps = Collections.emptyList();
             resourceSteps = Collections.emptyList();
-            deregisterStep = Optional.empty();
             plan = new DefaultPlan(Constants.DEPLOY_PLAN_NAME, Collections.emptyList());
             return;
         }
@@ -144,10 +145,9 @@ class UninstallPlanBuilder {
 
         // Finally, we unregister the framework from Mesos.
         // We don't have access to the SchedulerDriver yet. That will be set via setSchedulerDriver() below.
-        deregisterStep = Optional.of(new DeregisterStep(stateStore));
         phases.add(new DefaultPhase(
                 DEREGISTER_PHASE,
-                Collections.singletonList(deregisterStep.get()),
+                Collections.singletonList(deregisterStep),
                 new SerialStrategy<>(),
                 Collections.emptyList()));
 
@@ -168,18 +168,5 @@ class UninstallPlanBuilder {
      */
     Collection<Step> getResourceSteps() {
         return resourceSteps;
-    }
-
-    /**
-     * Passes the provided {@link SchedulerDriver} to underlying plan elements.
-     */
-    void registered(SchedulerDriver schedulerDriver) {
-        if (deregisterStep.isPresent()) {
-            deregisterStep.get().setSchedulerDriver(schedulerDriver);
-        }
-        taskKiller.setSchedulerDriver(schedulerDriver);
-        for (Step taskKillStep : taskKillSteps) {
-            ((TaskKillStep) taskKillStep).setTaskKiller(taskKiller);
-        }
     }
 }
