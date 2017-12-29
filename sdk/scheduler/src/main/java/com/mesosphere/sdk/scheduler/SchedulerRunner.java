@@ -1,11 +1,13 @@
 package com.mesosphere.sdk.scheduler;
 
 import com.google.protobuf.TextFormat;
+import com.mesosphere.sdk.api.HealthResource;
 import com.mesosphere.sdk.config.validate.PodSpecsCannotUseUnsupportedFeatures;
 import com.mesosphere.sdk.curator.CuratorLocker;
 import com.mesosphere.sdk.dcos.Capabilities;
 import com.mesosphere.sdk.generated.SDKBuildInfo;
 import com.mesosphere.sdk.offer.Constants;
+import com.mesosphere.sdk.scheduler.uninstall.UninstallScheduler;
 import com.mesosphere.sdk.specification.DefaultServiceSpec;
 import com.mesosphere.sdk.specification.ServiceSpec;
 import com.mesosphere.sdk.specification.yaml.RawServiceSpec;
@@ -14,12 +16,16 @@ import com.mesosphere.sdk.storage.PersisterException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
+import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -112,6 +118,18 @@ public class SchedulerRunner implements Runnable {
                     schedulerBuilder.getServiceSpec(),
                     schedulerBuilder.getSchedulerConfig(),
                     schedulerBuilder.getStateStore());
+        } else {
+            /**
+             * If no MesosScheduler is provided this scheduler has been deregistered and should report itself healthy
+             * so it may complete its UNINSTALL. See {@link UninstallScheduler#getMesosScheduler()}.
+             */
+            SchedulerApiServer apiServer = new SchedulerApiServer(schedulerConfig, Arrays.asList(new HealthResource()));
+            apiServer.start(new AbstractLifeCycle.AbstractLifeCycleListener() {
+                @Override
+                public void lifeCycleStarted(LifeCycle event) {
+                    LOGGER.info("Started trivially healthy API server.");
+                }
+            });
         }
     }
 
