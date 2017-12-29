@@ -109,7 +109,7 @@ public class DefaultPlanCoordinatorTest extends DefaultCapabilitiesTestSuite {
                         SchedulerConfigTestUtils.getTestSchedulerConfig(),
                         true),
                 stateStore,
-                new DefaultTaskKiller(taskFailureListener).setSchedulerDriver(schedulerDriver));
+                new DefaultTaskKiller(taskFailureListener, schedulerDriver));
         serviceSpecificationB = DefaultServiceSpec.newBuilder()
                 .name(SERVICE_NAME + "-B")
                 .role(TestConstants.ROLE)

@@ -132,7 +132,7 @@ public class DefaultRecoveryPlanManagerTest extends DefaultCapabilitiesTestSuite
                         SchedulerConfigTestUtils.getTestSchedulerConfig(),
                         true),
                 stateStore,
-                new DefaultTaskKiller(taskFailureListener).setSchedulerDriver(schedulerDriver));
+                new DefaultTaskKiller(taskFailureListener, schedulerDriver));
         planCoordinator = new DefaultPlanCoordinator(Arrays.asList(mockDeployManager, recoveryManager));
     }
 
