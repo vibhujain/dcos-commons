@@ -179,10 +179,6 @@ public class DefaultRecoveryPlanManager implements PlanManager {
         return DeployPlanFactory.getPlan(DEFAULT_RECOVERY_PLAN_NAME, phases, new ParallelStrategy<>());
     }
 
-    private boolean isTaskPermanentlyFailed(Protos.TaskInfo taskInfo) {
-        return FailureUtils.isPermanentlyFailed(taskInfo) || failureMonitor.hasFailed(taskInfo);
-    }
-
     private boolean failureStateHasChanged(PodInstanceRequirement podInstanceRequirement) {
         RecoveryType original = podInstanceRequirement.getRecoveryType();
 
@@ -214,14 +210,14 @@ public class DefaultRecoveryPlanManager implements PlanManager {
      */
     private RecoveryType getRecoveryType(Collection<Protos.TaskInfo> taskInfos) {
         // PodInstanceRequirements must have a uniform recovery type (PERMANENT OR TRANSIENT).
-        if (taskInfos.stream().allMatch(taskInfo -> isTaskPermanentlyFailed(taskInfo))) {
+        if (taskInfos.stream().allMatch(taskInfo -> failureMonitor.hasFailed(taskInfo))) {
             return RecoveryType.PERMANENT;
-        } else if (taskInfos.stream().noneMatch(taskInfo -> isTaskPermanentlyFailed(taskInfo))) {
+        } else if (taskInfos.stream().noneMatch(taskInfo -> failureMonitor.hasFailed(taskInfo))) {
             return RecoveryType.TRANSIENT;
         } else {
             for (Protos.TaskInfo taskInfo : taskInfos) {
                 RecoveryType recoveryType =
-                        isTaskPermanentlyFailed(taskInfo) ? RecoveryType.PERMANENT : RecoveryType.TRANSIENT;
+                        failureMonitor.hasFailed(taskInfo) ? RecoveryType.PERMANENT : RecoveryType.TRANSIENT;
                 logger.info("Task: {} has recovery type: {}", taskInfo.getName(), recoveryType);
             }
             return RecoveryType.NONE;
@@ -305,12 +301,12 @@ public class DefaultRecoveryPlanManager implements PlanManager {
 
     private void logFailedPod(String failedPodName, List<Protos.TaskInfo> failedTasks) {
         List<String> permanentlyFailedTasks = failedTasks.stream()
-                .filter(taskInfo -> isTaskPermanentlyFailed(taskInfo))
+                .filter(taskInfo -> failureMonitor.hasFailed(taskInfo))
                 .map(taskInfo -> taskInfo.getName())
                 .collect(Collectors.toList());
 
         List<String> transientlyFailedTasks = failedTasks.stream()
-                .filter(taskInfo -> !isTaskPermanentlyFailed(taskInfo))
+                .filter(taskInfo -> !failureMonitor.hasFailed(taskInfo))
                 .map(taskInfo -> taskInfo.getName())
                 .collect(Collectors.toList());
 
