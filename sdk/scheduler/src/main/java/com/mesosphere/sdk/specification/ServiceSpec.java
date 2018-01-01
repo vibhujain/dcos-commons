@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mesosphere.sdk.config.Configuration;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Defines a Service's configuration.
@@ -27,9 +26,6 @@ public interface ServiceSpec extends Configuration {
 
     @JsonProperty("zookeeper")
     String getZookeeperConnection();
-
-    @JsonProperty("replacement-failure-policy")
-    Optional<ReplacementFailurePolicy> getReplacementFailurePolicy();
 
     @JsonProperty("user")
     String getUser();

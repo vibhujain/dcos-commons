@@ -5,20 +5,21 @@ import com.mesosphere.sdk.api.*;
 import com.mesosphere.sdk.api.types.EndpointProducer;
 import com.mesosphere.sdk.api.types.StringPropertyDeserializer;
 import com.mesosphere.sdk.dcos.Capabilities;
-import com.mesosphere.sdk.offer.*;
+import com.mesosphere.sdk.offer.DefaultResourceCleaner;
+import com.mesosphere.sdk.offer.OfferAccepter;
+import com.mesosphere.sdk.offer.OfferUtils;
+import com.mesosphere.sdk.offer.ResourceCleanerScheduler;
 import com.mesosphere.sdk.offer.evaluate.OfferEvaluator;
 import com.mesosphere.sdk.offer.history.OfferOutcomeTracker;
 import com.mesosphere.sdk.scheduler.decommission.DecommissionPlanFactory;
 import com.mesosphere.sdk.scheduler.decommission.DecommissionRecorder;
 import com.mesosphere.sdk.scheduler.plan.*;
-import com.mesosphere.sdk.scheduler.recovery.*;
-import com.mesosphere.sdk.scheduler.recovery.constrain.LaunchConstrainer;
-import com.mesosphere.sdk.scheduler.recovery.constrain.TimedLaunchConstrainer;
+import com.mesosphere.sdk.scheduler.recovery.DefaultRecoveryPlanManager;
+import com.mesosphere.sdk.scheduler.recovery.DefaultTaskFailureListener;
+import com.mesosphere.sdk.scheduler.recovery.RecoveryPlanOverrider;
+import com.mesosphere.sdk.scheduler.recovery.RecoveryPlanOverriderFactory;
 import com.mesosphere.sdk.scheduler.recovery.constrain.UnconstrainedLaunchConstrainer;
-import com.mesosphere.sdk.scheduler.recovery.monitor.FailureMonitor;
-import com.mesosphere.sdk.scheduler.recovery.monitor.NeverFailureMonitor;
-import com.mesosphere.sdk.scheduler.recovery.monitor.TimedFailureMonitor;
-import com.mesosphere.sdk.specification.ReplacementFailurePolicy;
+import com.mesosphere.sdk.scheduler.recovery.monitor.DefaultFailureMonitor;
 import com.mesosphere.sdk.specification.ServiceSpec;
 import com.mesosphere.sdk.state.*;
 import com.mesosphere.sdk.storage.Persister;
@@ -28,7 +29,6 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -112,7 +112,10 @@ public class DefaultScheduler extends AbstractScheduler {
         this.resources.add(this.plansResource);
         this.healthResource = new HealthResource();
         this.resources.add(this.healthResource);
-        this.podResource = new PodResource(stateStore, serviceSpec.getName());
+        this.podResource = new PodResource(
+                stateStore,
+                serviceSpec.getName(),
+                new DefaultTaskFailureListener(stateStore, configStore));
         this.resources.add(this.podResource);
         this.resources.add(new StateResource(stateStore, new StringPropertyDeserializer()));
 
@@ -130,7 +133,7 @@ public class DefaultScheduler extends AbstractScheduler {
         // NOTE: We wait until this point to perform any work using configStore/stateStore.
         // We specifically avoid writing any data to ZK before registered() has been called.
 
-        taskKiller = new TaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
+        taskKiller = new TaskKiller(driver);
 
         PlanManager deploymentPlanManager =
                 DefaultPlanManager.createProceeding(SchedulerUtils.getDeployPlan(plans).get());
@@ -151,7 +154,7 @@ public class DefaultScheduler extends AbstractScheduler {
 
         plansResource.setPlanManagers(planCoordinator.getPlanManagers());
         healthResource.setHealthyPlanManagers(Arrays.asList(deploymentPlanManager, recoveryPlanManager));
-        podResource.setTaskKiller(taskKiller);
+        podResource.setTaskKiller(new TaskKiller(driver));
         return planCoordinator;
     }
 
@@ -197,26 +200,13 @@ public class DefaultScheduler extends AbstractScheduler {
             LOGGER.info("Adding overriding recovery plan manager.");
             overrideRecoveryPlanManagers.add(recoveryPlanOverriderFactory.get().create(stateStore, plans));
         }
-        final LaunchConstrainer launchConstrainer;
-        final FailureMonitor failureMonitor;
-        if (serviceSpec.getReplacementFailurePolicy().isPresent()) {
-            ReplacementFailurePolicy failurePolicy = serviceSpec.getReplacementFailurePolicy().get();
-            launchConstrainer = new TimedLaunchConstrainer(
-                    Duration.ofMinutes(failurePolicy.getMinReplaceDelayMin()));
-            failureMonitor = new TimedFailureMonitor(
-                    Duration.ofMinutes(failurePolicy.getPermanentFailureTimoutMin()),
-                    stateStore,
-                    configStore);
-        } else {
-            launchConstrainer = new UnconstrainedLaunchConstrainer();
-            failureMonitor = new NeverFailureMonitor();
-        }
+
         return new DefaultRecoveryPlanManager(
                 stateStore,
                 configStore,
                 PlanUtils.getLaunchableTasks(plans),
-                launchConstrainer,
-                failureMonitor,
+                new UnconstrainedLaunchConstrainer(),
+                new DefaultFailureMonitor(),
                 overrideRecoveryPlanManagers);
     }
 

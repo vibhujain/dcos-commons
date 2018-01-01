@@ -70,7 +70,6 @@ public class DefaultRecoveryPlanManagerTest extends DefaultCapabilitiesTestSuite
     private PlanCoordinator planCoordinator;
     private DefaultPlanScheduler planScheduler;
     private PlanManager mockDeployManager;
-    private TaskFailureListener taskFailureListener;
     private ServiceSpec serviceSpec;
 
     private static List<Offer> getOffers() {
@@ -113,7 +112,6 @@ public class DefaultRecoveryPlanManagerTest extends DefaultCapabilitiesTestSuite
                 .build();
 
         taskInfos = Collections.singletonList(taskInfo);
-        taskFailureListener = mock(TaskFailureListener.class);
         recoveryManager = spy(new DefaultRecoveryPlanManager(
                 stateStore,
                 configStore,
@@ -134,7 +132,7 @@ public class DefaultRecoveryPlanManagerTest extends DefaultCapabilitiesTestSuite
                         SchedulerConfigTestUtils.getTestSchedulerConfig(),
                         true),
                 stateStore,
-                new TaskKiller(taskFailureListener, schedulerDriver));
+                new TaskKiller(schedulerDriver));
         planCoordinator = new DefaultPlanCoordinator(Arrays.asList(mockDeployManager, recoveryManager));
     }
 
@@ -370,8 +368,6 @@ public class DefaultRecoveryPlanManagerTest extends DefaultCapabilitiesTestSuite
         verify(offerAccepter, times(1)).accept(any(), recommendationCaptor.capture());
         assertEquals(6, recommendationCaptor.getValue().size());
 
-        // Verify the appropriate task was not checked for failure with failure monitor.
-        verify(failureMonitor, never()).hasFailed(any());
         reset(mockDeployManager);
     }
 

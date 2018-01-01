@@ -235,7 +235,6 @@ public class ZoneValidatorTest {
                 "http://web-url",
                 "http://zookeeper",
                 Arrays.asList(podSpec),
-                null,
                 TestConstants.SERVICE_USER);
     }
 }

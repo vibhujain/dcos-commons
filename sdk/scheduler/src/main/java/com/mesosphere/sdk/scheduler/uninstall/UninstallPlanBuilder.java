@@ -29,7 +29,6 @@ import com.mesosphere.sdk.scheduler.plan.Status;
 import com.mesosphere.sdk.scheduler.plan.Step;
 import com.mesosphere.sdk.scheduler.plan.strategy.ParallelStrategy;
 import com.mesosphere.sdk.scheduler.plan.strategy.SerialStrategy;
-import com.mesosphere.sdk.scheduler.recovery.DefaultTaskFailureListener;
 import com.mesosphere.sdk.scheduler.recovery.FailureUtils;
 import com.mesosphere.sdk.specification.ServiceSpec;
 import com.mesosphere.sdk.state.ConfigStore;
@@ -67,7 +66,7 @@ class UninstallPlanBuilder {
         List<Phase> phases = new ArrayList<>();
 
         // First, we kill all the tasks, so that we may release their reserved resources.
-        TaskKiller taskKiller = new TaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
+        TaskKiller taskKiller = new TaskKiller(driver);
         List<Step> taskKillSteps = stateStore.fetchTasks().stream()
                 .map(Protos.TaskInfo::getTaskId)
                 .map(taskID -> new TaskKillStep(taskID, taskKiller))

@@ -4,6 +4,7 @@ import com.mesosphere.sdk.api.types.TaskInfoAndStatus;
 import com.mesosphere.sdk.offer.CommonIdUtils;
 import com.mesosphere.sdk.offer.taskdata.TaskLabelWriter;
 import com.mesosphere.sdk.scheduler.TaskKiller;
+import com.mesosphere.sdk.scheduler.recovery.TaskFailureListener;
 import com.mesosphere.sdk.state.GoalStateOverride;
 import com.mesosphere.sdk.state.StateStore;
 import com.mesosphere.sdk.testutils.TaskTestUtils;
@@ -109,6 +110,7 @@ public class PodResourceTest {
             POD_2_STATUS_A);
 
     @Mock private TaskKiller mockTaskKiller;
+    @Mock private TaskFailureListener mockTaskFailureListener;
     @Mock private StateStore mockStateStore;
 
     private PodResource resource;
@@ -116,7 +118,7 @@ public class PodResourceTest {
     @Before
     public void beforeAll() {
         MockitoAnnotations.initMocks(this);
-        resource = new PodResource(mockStateStore, TestConstants.SERVICE_NAME);
+        resource = new PodResource(mockStateStore, TestConstants.SERVICE_NAME, mockTaskFailureListener);
         resource.setTaskKiller(mockTaskKiller);
     }
 

@@ -65,9 +65,6 @@ public class DefaultServiceSpec implements ServiceSpec {
     @UniquePodType(message = "Pod types must be unique")
     private List<PodSpec> pods;
 
-    @Valid
-    private ReplacementFailurePolicy replacementFailurePolicy;
-
     @JsonCreator
     public DefaultServiceSpec(
             @JsonProperty("name") String name,
@@ -76,7 +73,6 @@ public class DefaultServiceSpec implements ServiceSpec {
             @JsonProperty("web-url") String webUrl,
             @JsonProperty("zookeeper") String zookeeperConnection,
             @JsonProperty("pod-specs") List<PodSpec> pods,
-            @JsonProperty("replacement-failure-policy") ReplacementFailurePolicy replacementFailurePolicy,
             @JsonProperty("user") String user) {
         this.name = name;
         this.role = role;
@@ -86,7 +82,6 @@ public class DefaultServiceSpec implements ServiceSpec {
         this.zookeeperConnection = StringUtils.isBlank(zookeeperConnection)
                 ? DcosConstants.MESOS_MASTER_ZK_CONNECTION_STRING : zookeeperConnection;
         this.pods = pods;
-        this.replacementFailurePolicy = replacementFailurePolicy;
         this.user = getUser(user, pods);
         ValidationUtils.validate(this);
     }
@@ -119,7 +114,6 @@ public class DefaultServiceSpec implements ServiceSpec {
                 builder.webUrl,
                 builder.zookeeperConnection,
                 builder.pods,
-                builder.replacementFailurePolicy,
                 builder.user);
     }
 
@@ -174,7 +168,6 @@ public class DefaultServiceSpec implements ServiceSpec {
         builder.zookeeperConnection = copy.getZookeeperConnection();
         builder.webUrl = copy.getWebUrl();
         builder.pods = copy.getPods();
-        builder.replacementFailurePolicy = copy.getReplacementFailurePolicy().orElse(null);
         builder.user = copy.getUser();
         return builder;
     }
@@ -207,11 +200,6 @@ public class DefaultServiceSpec implements ServiceSpec {
     @Override
     public List<PodSpec> getPods() {
         return pods;
-    }
-
-    @Override
-    public Optional<ReplacementFailurePolicy> getReplacementFailurePolicy() {
-        return Optional.ofNullable(replacementFailurePolicy);
     }
 
     @Override
@@ -502,7 +490,6 @@ public class DefaultServiceSpec implements ServiceSpec {
         private String webUrl;
         private String zookeeperConnection;
         private List<PodSpec> pods = new ArrayList<>();
-        private ReplacementFailurePolicy replacementFailurePolicy;
         private String user;
 
         private Builder() {
@@ -597,18 +584,6 @@ public class DefaultServiceSpec implements ServiceSpec {
          */
         public Builder addPod(PodSpec pod) {
             this.pods.add(pod);
-            return this;
-        }
-
-        /**
-         * Sets the {@code replacementFailurePolicy} and returns a reference to this Builder so that the methods can be
-         * chained together.
-         *
-         * @param replacementFailurePolicy the {@code replacementFailurePolicy} to set
-         * @return a reference to this Builder
-         */
-        public Builder replacementFailurePolicy(ReplacementFailurePolicy replacementFailurePolicy) {
-            this.replacementFailurePolicy = replacementFailurePolicy;
             return this;
         }
 
