@@ -130,7 +130,7 @@ public class DefaultScheduler extends AbstractScheduler {
         // NOTE: We wait until this point to perform any work using configStore/stateStore.
         // We specifically avoid writing any data to ZK before registered() has been called.
 
-        taskKiller = new DefaultTaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
+        taskKiller = new TaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
 
         PlanManager deploymentPlanManager =
                 DefaultPlanManager.createProceeding(SchedulerUtils.getDeployPlan(plans).get());
@@ -178,7 +178,7 @@ public class DefaultScheduler extends AbstractScheduler {
             stateStore.storeTasks(Arrays.asList(taskInfo));
         }
 
-        taskIds.forEach(taskID -> taskKiller.killTask(taskID, RecoveryType.NONE));
+        taskIds.forEach(taskID -> taskKiller.killTask(taskID));
 
         for (Protos.TaskInfo taskInfo : stateStore.fetchTasks()) {
             GoalStateOverride.Status overrideStatus = stateStore.fetchGoalOverrideStatus(taskInfo.getName());
@@ -186,7 +186,7 @@ public class DefaultScheduler extends AbstractScheduler {
                 // Enabling or disabling an override was triggered, but the task kill wasn't processed so that the
                 // change in override could take effect. Kill the task so that it can enter (or exit) the override. The
                 // override status will then be marked IN_PROGRESS once we have received the terminal TaskStatus.
-                taskKiller.killTask(taskInfo.getTaskId(), RecoveryType.TRANSIENT);
+                taskKiller.killTask(taskInfo.getTaskId());
             }
         }
     }

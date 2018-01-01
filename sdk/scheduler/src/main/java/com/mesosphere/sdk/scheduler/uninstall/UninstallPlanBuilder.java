@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.mesosphere.sdk.scheduler.TaskKiller;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
@@ -19,9 +20,7 @@ import com.mesosphere.sdk.dcos.clients.SecretsClient;
 import com.mesosphere.sdk.offer.Constants;
 import com.mesosphere.sdk.offer.ResourceUtils;
 import com.mesosphere.sdk.offer.TaskUtils;
-import com.mesosphere.sdk.scheduler.DefaultTaskKiller;
 import com.mesosphere.sdk.scheduler.SchedulerConfig;
-import com.mesosphere.sdk.scheduler.TaskKiller;
 import com.mesosphere.sdk.scheduler.plan.DefaultPhase;
 import com.mesosphere.sdk.scheduler.plan.DefaultPlan;
 import com.mesosphere.sdk.scheduler.plan.Phase;
@@ -68,7 +67,7 @@ class UninstallPlanBuilder {
         List<Phase> phases = new ArrayList<>();
 
         // First, we kill all the tasks, so that we may release their reserved resources.
-        TaskKiller taskKiller = new DefaultTaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
+        TaskKiller taskKiller = new TaskKiller(new DefaultTaskFailureListener(stateStore, configStore), driver);
         List<Step> taskKillSteps = stateStore.fetchTasks().stream()
                 .map(Protos.TaskInfo::getTaskId)
                 .map(taskID -> new TaskKillStep(taskID, taskKiller))
