@@ -52,6 +52,8 @@ public class DefaultPodSpec implements PodSpec {
     private String preReservedRole;
     @NotNull
     private Boolean sharePidNamespace;
+    @NotNull
+    private ReplacementPolicy replacementPolicy;
 
     @JsonCreator
     public DefaultPodSpec(
@@ -68,7 +70,8 @@ public class DefaultPodSpec implements PodSpec {
             @JsonProperty("pre-reserved-role") String preReservedRole,
             @JsonProperty("secrets") Collection<SecretSpec> secrets,
             @JsonProperty("share-pid-namespace") Boolean sharePidNamespace,
-            @JsonProperty("allow-decommission") Boolean allowDecommission) {
+            @JsonProperty("allow-decommission") Boolean allowDecommission,
+            @JsonProperty("replacement-policy") ReplacementPolicy replacementPolicy) {
         this(
                 new Builder(Optional.empty()) // Assume that Executor URI is already present
                         .type(type)
@@ -84,7 +87,8 @@ public class DefaultPodSpec implements PodSpec {
                         .preReservedRole(preReservedRole)
                         .secrets(secrets)
                         .sharePidNamespace(sharePidNamespace)
-                        .allowDecommission(allowDecommission));
+                        .allowDecommission(allowDecommission)
+                        .replacementPolicy(replacementPolicy));
     }
 
     private DefaultPodSpec(Builder builder) {
@@ -102,6 +106,7 @@ public class DefaultPodSpec implements PodSpec {
         this.user = builder.user;
         this.volumes = builder.volumes;
         this.sharePidNamespace = builder.sharePidNamespace;
+        this.replacementPolicy = builder.replacementPolicy;
         ValidationUtils.validate(this);
     }
 
@@ -125,6 +130,7 @@ public class DefaultPodSpec implements PodSpec {
         builder.user = copy.getUser().isPresent() ? copy.getUser().get() : null;
         builder.volumes = copy.getVolumes();
         builder.sharePidNamespace = copy.getSharePidNamespace();
+        builder.replacementPolicy = copy.getReplacementPolicy();
         return builder;
     }
 
@@ -199,6 +205,11 @@ public class DefaultPodSpec implements PodSpec {
     }
 
     @Override
+    public ReplacementPolicy getReplacementPolicy() {
+        return replacementPolicy;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return EqualsBuilder.reflectionEquals(this, o);
     }
@@ -233,6 +244,7 @@ public class DefaultPodSpec implements PodSpec {
         private Collection<VolumeSpec> volumes = new ArrayList<>();
         private Collection<SecretSpec> secrets = new ArrayList<>();
         private Boolean sharePidNamespace = false;
+        private ReplacementPolicy replacementPolicy = ReplacementPolicy.DEFAULT;
 
         private Builder(Optional<String> executorUri) {
             this.executorUri = executorUri;
@@ -454,6 +466,11 @@ public class DefaultPodSpec implements PodSpec {
          */
         public Builder sharePidNamespace(Boolean sharePidNamespace) {
             this.sharePidNamespace = sharePidNamespace != null && sharePidNamespace;
+            return this;
+        }
+
+        public Builder replacementPolicy(ReplacementPolicy replacementPolicy) {
+            this.replacementPolicy = replacementPolicy;
             return this;
         }
 

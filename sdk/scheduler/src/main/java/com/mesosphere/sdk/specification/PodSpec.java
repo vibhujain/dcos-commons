@@ -57,6 +57,9 @@ public interface PodSpec {
     @JsonProperty("share-pid-namespace")
     Boolean getSharePidNamespace();
 
+    @JsonProperty("replacement-policy")
+    ReplacementPolicy getReplacementPolicy();
+
     @JsonIgnore
     static String getName(PodSpec podSpec, int index) {
         return podSpec.getType() + "-" + index;
