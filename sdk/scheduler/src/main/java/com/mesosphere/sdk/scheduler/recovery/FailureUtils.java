@@ -54,7 +54,7 @@ public class FailureUtils {
     }
 
     /**
-     * Determines whether the given TaskStatus indicates that the Task has failed according to to its
+     * Determines whether the given TaskStatus indicates that the Task has failed according to its
      * {@link ReplacementPolicy}.
      */
     public static boolean shouldReplacePod(
@@ -67,12 +67,11 @@ public class FailureUtils {
 
         switch (state) {
             case TASK_FAILED:
-                return replacementPolicy.getTrigger() == ReplacementPolicy.Trigger.FAILED;
             case TASK_LOST:
             case TASK_DROPPED:
             case TASK_UNREACHABLE:
             case TASK_UNKNOWN:
-                return replacementPolicy.getTrigger().ordinal() <= ReplacementPolicy.Trigger.LOST.ordinal();
+                return replacementPolicy.getTrigger() == ReplacementPolicy.Trigger.FAILED;
             case TASK_GONE:
             case TASK_GONE_BY_OPERATOR:
                 return replacementPolicy.getTrigger().ordinal() <= ReplacementPolicy.Trigger.GONE.ordinal();

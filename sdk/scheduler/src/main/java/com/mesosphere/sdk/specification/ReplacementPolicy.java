@@ -11,7 +11,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class ReplacementPolicy {
     public static final ReplacementPolicy FAILED = new ReplacementPolicy(Trigger.FAILED);
-    public static final ReplacementPolicy LOST = new ReplacementPolicy(Trigger.LOST);
     public static final ReplacementPolicy GONE = new ReplacementPolicy(Trigger.GONE);
     public static final ReplacementPolicy MANUAL = new ReplacementPolicy(Trigger.MANUAL);
     public static final ReplacementPolicy DEFAULT = MANUAL;
@@ -26,9 +25,8 @@ public class ReplacementPolicy {
      * See {@link com.mesosphere.sdk.scheduler.recovery.FailureUtils}
      */
     public static enum Trigger {
-        FAILED, // [TASK_FAILED]
-        LOST,   // [TASK_LOST, TASK_DROPPED, TASK_UNREACHABLE, TASK_UNKNOWN] + FAILED states
-        GONE,   // [TASK_GONE, TASK_GONE_BY_OPERATOR] + LOST states
+        FAILED, // [TASK_FAILED, TASK_LOST, TASK_DROPPED, TASK_UNREACHABLE, TASK_UNKNOWN]
+        GONE,   // [TASK_GONE, TASK_GONE_BY_OPERATOR] + FAILED states
         MANUAL  // Replacement requires external input.  This is the default behavior.
     }
 
