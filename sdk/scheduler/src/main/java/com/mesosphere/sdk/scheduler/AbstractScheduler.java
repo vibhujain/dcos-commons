@@ -248,7 +248,7 @@ public abstract class AbstractScheduler {
                 SchedulerUtils.hardExit(SchedulerErrorCode.INITIALIZATION_FAILURE);
             }
 
-            // Trigger launch of the API server. We start processing offers only once the API server has launched.
+            // Threshold launch of the API server. We start processing offers only once the API server has launched.
             if (apiServerStarted.get()) {
                 LOGGER.info("Skipping API server setup");
             } else {

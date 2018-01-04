@@ -71,10 +71,10 @@ public class FailureUtils {
             case TASK_DROPPED:
             case TASK_UNREACHABLE:
             case TASK_UNKNOWN:
-                return replacementPolicy.getTrigger() == ReplacementPolicy.Trigger.FAILED;
+                return replacementPolicy.getThreshold() == ReplacementPolicy.Threshold.FAILED;
             case TASK_GONE:
             case TASK_GONE_BY_OPERATOR:
-                return replacementPolicy.getTrigger().ordinal() <= ReplacementPolicy.Trigger.GONE.ordinal();
+                return replacementPolicy.getThreshold().ordinal() <= ReplacementPolicy.Threshold.GONE.ordinal();
             default:
                 return false;
         }
