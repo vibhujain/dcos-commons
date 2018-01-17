@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.mesosphere.sdk.offer.evaluate.placement.RegexMatcher;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 import org.junit.After;
@@ -323,6 +324,202 @@ public class ServiceTest {
         ticks.add(Expect.allPlansComplete());
 
         new ServiceTestRunner().setOptions("world.count", "0").setState(result).run(ticks);
+    }
+
+    /**
+     * This is a full re-implementation of test_canary_strategy.py.
+     */
+    @Test
+    public void canary() throws Exception {
+        Collection<SimulationTick> ticks = new ArrayList<>();
+
+        ticks.add(Send.register());
+
+        ticks.add(Expect.reconciledImplicitly());
+
+        // Verify initial deploy status
+        // test_canary_init()#start()
+        ticks.add(Expect.deployPlanHasStatus(Status.WAITING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+        // test_canary_init()#end()
+
+        // dcos hello-world plan continue deploy hello-deploy
+        // test_canary_first()#start()
+        ticks.add(Send.continueDeployPhase("hello-deploy"));
+        ticks.add(Expect.deployPlanHasStatus(Status.PENDING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.PENDING, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+
+        // launch hello-0-server
+        ticks.add(Send.offerBuilder("hello").build());
+        ticks.add(Expect.launchedTasks("hello-0-server"));
+        ticks.add(Send.taskStatus("hello-0-server", Protos.TaskState.TASK_RUNNING).build());
+
+        ticks.add(Expect.deployPlanHasStatus(Status.WAITING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+        // test_canary_first()#end()
+
+        // Skipping no-op `dcos hello-world plan continue deploy` for now
+        // test_canary_plan_continue_noop()
+
+        // dcos hello-world plan continue deploy world-deploy
+        // test_canary_second()#start()
+        ticks.add(Send.continueDeployPhase("world-deploy"));
+        ticks.add(Expect.deployPlanHasStatus(Status.WAITING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.PENDING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+
+        // deploy plan is serial, so attempting to launch a world task should fail
+        ticks.add(Send.offerBuilder("world").build());
+        ticks.add(Expect.declinedLastOffer());
+
+        // dcos hello-world plan continue deploy hello-deploy
+        ticks.add(Send.continueDeployPhase("hello-deploy"));
+        ticks.add(Expect.deployPlanHasStatus(Status.IN_PROGRESS));
+        ticks.add(Expect.deployPhaseHasStatus(Status.IN_PROGRESS, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.PENDING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+        // test_canary_second()#end()
+
+        // Launch the rest of the hello pods
+        // test_canary_third()#start()
+        ticks.add(Send.offerBuilder("hello").build());
+        ticks.add(Expect.launchedTasks(RegexMatcher.create("hello-.*"), 1));
+        ticks.add(Send.offerBuilder("hello").build());
+        ticks.add(Expect.launchedTasks(RegexMatcher.create("hello-.*"), 1));
+        ticks.add(Send.offerBuilder("hello").build());
+        ticks.add(Expect.launchedTasks(RegexMatcher.create("hello-.*"), 1));
+        ticks.add(Send.taskStatus("hello-1-server", Protos.TaskState.TASK_RUNNING).build());
+        ticks.add(Send.taskStatus("hello-2-server", Protos.TaskState.TASK_RUNNING).build());
+        ticks.add(Send.taskStatus("hello-3-server", Protos.TaskState.TASK_RUNNING).build());
+
+        // Launch the first world pod which was 'continued' above but which wasn't a candidate until
+        // hello-deploy phase completed
+        ticks.add(Send.offerBuilder("world").build());
+        ticks.add(Expect.launchedTasks("world-0-server"));
+        ticks.add(Send.taskStatus("world-0-server", Protos.TaskState.TASK_RUNNING).build());
+
+        ticks.add(Expect.deployPlanHasStatus(Status.WAITING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.WAITING, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+        // test_canary_third()#end()
+
+        // Complete deployment of world-deploy phase
+        // test_canary_fourth()#start()
+        ticks.add(Send.continueDeployPhase("world-deploy"));
+        ticks.add(Expect.deployPlanHasStatus(Status.IN_PROGRESS));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.IN_PROGRESS, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.PENDING, "world-deploy", "world-3:[server]"));
+
+        // Launch the rest of the world pods
+        ticks.add(Send.offerBuilder("world").build());
+        ticks.add(Expect.launchedTasks("world-1-server"));
+        ticks.add(Send.taskStatus("world-1-server", Protos.TaskState.TASK_RUNNING).build());
+
+        ticks.add(Send.offerBuilder("world").build());
+        ticks.add(Expect.launchedTasks("world-2-server"));
+        ticks.add(Send.taskStatus("world-2-server", Protos.TaskState.TASK_RUNNING).build());
+
+        ticks.add(Send.offerBuilder("world").build());
+        ticks.add(Expect.launchedTasks("world-3-server"));
+        ticks.add(Send.taskStatus("world-3-server", Protos.TaskState.TASK_RUNNING).build());
+
+        ticks.add(Expect.deployPlanHasStatus(Status.COMPLETE));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-3:[server]"));
+        // test_canary_fourth()#end()
+
+        ServiceTestResult result = new ServiceTestRunner("examples/canary.yml")
+                .setOptions("hello.count", "4", "world.count", "4")
+                .run(ticks);
+
+        // Scale hello pod count up by 1
+        // test_increase_count()#start()
+        ticks = new ArrayList<>();
+        ticks.add(Expect.deployPlanHasStatus(Status.WAITING));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "hello-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "hello-deploy", "hello-3:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.WAITING, "hello-deploy", "hello-4:[server]"));
+        ticks.add(Expect.deployPhaseHasStatus(Status.COMPLETE, "world-deploy"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-0:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-1:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-2:[server]"));
+        ticks.add(Expect.deployStepHasStatus(Status.COMPLETE, "world-deploy", "world-3:[server]"));
+        // test_increase_count()#end()
+
+        result = new ServiceTestRunner("examples/canary.yml")
+                .setOptions("hello.count", "5", "world.count", "4")
+                .setState(result)
+                .run(ticks);
+
     }
 
     private static class StepCount {

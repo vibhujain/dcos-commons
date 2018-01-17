@@ -1,21 +1,14 @@
 package com.mesosphere.sdk.testing;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
+import com.mesosphere.sdk.offer.ResourceUtils;
+import com.mesosphere.sdk.offer.evaluate.placement.StringMatcher;
+import com.mesosphere.sdk.offer.taskdata.TaskPackingUtils;
+import com.mesosphere.sdk.scheduler.plan.Phase;
+import com.mesosphere.sdk.scheduler.plan.Plan;
+import com.mesosphere.sdk.scheduler.plan.Status;
+import com.mesosphere.sdk.scheduler.plan.Step;
+import com.mesosphere.sdk.state.StateStore;
+import com.mesosphere.sdk.storage.Persister;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.SchedulerDriver;
@@ -23,18 +16,22 @@ import org.junit.Assert;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.mesosphere.sdk.offer.ResourceUtils;
-import com.mesosphere.sdk.offer.taskdata.TaskPackingUtils;
-import com.mesosphere.sdk.scheduler.plan.Plan;
-import com.mesosphere.sdk.state.StateStore;
-import com.mesosphere.sdk.storage.Persister;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 
 /**
  * A type of {@link SimulationTick} that verifies the scheduler did something.
  */
 public interface Expect extends SimulationTick {
+
+    static final Logger LOGGER = LoggerFactory.getLogger(Expect.class);
 
     /**
      * Verifies that the last offer sent to the scheduler was declined.
@@ -66,6 +63,20 @@ public interface Expect extends SimulationTick {
      * Verifies that a pod was launched with exactly the provided task names.
      */
     public static Expect launchedTasks(Collection<String> taskNames) {
+        return launchedTasks(
+                new StringMatcher() {
+                    @Override
+                    public boolean matches(String value) {
+                        return taskNames.contains(value);
+                    }
+                },
+                taskNames.size());
+    }
+
+    /**
+     * Verifies that a pod was launched with exactly the provided task names.
+     */
+    public static Expect launchedTasks(StringMatcher stringMatcher, int count) {
         return new Expect() {
             // Use this form instead of using ArgumentCaptor.forClass() to avoid problems with typecasting generics:
             @Captor private ArgumentCaptor<Collection<Protos.OfferID>> offerIdsCaptor;
@@ -78,8 +89,8 @@ public interface Expect extends SimulationTick {
                         .acceptOffers(offerIdsCaptor.capture(), operationsCaptor.capture(), any());
                 Protos.OfferID lastAcceptedOfferId = offerIdsCaptor.getValue().iterator().next();
                 Assert.assertEquals(String.format(
-                            "Expected last offer with ID %s to be accepted, but last accepted offer was %s",
-                            state.getLastOffer().getId().getValue(), lastAcceptedOfferId.getValue()),
+                        "Expected last offer with ID %s to be accepted, but last accepted offer was %s",
+                        state.getLastOffer().getId().getValue(), lastAcceptedOfferId.getValue()),
                         state.getLastOffer().getId(), lastAcceptedOfferId);
                 Collection<String> launchedTaskNames = new ArrayList<>();
                 // A single acceptOffers() call may contain multiple LAUNCH/LAUNCH_GROUP operations.
@@ -105,14 +116,18 @@ public interface Expect extends SimulationTick {
                 if (!launchedTaskInfos.isEmpty()) {
                     state.addLaunchedPod(launchedTaskInfos);
                 }
-                Assert.assertTrue(
-                        String.format("Expected launched tasks: %s, got tasks: %s", taskNames, launchedTaskNames),
-                        launchedTaskNames.containsAll(taskNames) && taskNames.containsAll(launchedTaskNames));
+
+                Assert.assertEquals(count, launchedTaskInfos.size());
+                Assert.assertEquals(
+                        count,
+                        launchedTaskNames.stream()
+                                .filter(taskName -> stringMatcher.matches(taskName))
+                                .count());
             }
 
             @Override
             public String getDescription() {
-                return String.format("Tasks were launched into a pod: %s", taskNames);
+                return String.format("%d task(s) matching pattern: %s launched into a pod", count, stringMatcher);
             }
         };
     }
@@ -299,6 +314,84 @@ public interface Expect extends SimulationTick {
             @Override
             public String getDescription() {
                 return "All plans complete";
+            }
+        };
+    }
+
+    /**
+     * Verifies that the scheduler's deploy plan has the expected status.
+     */
+    public static Expect deployPlanHasStatus(Status expectedStatus) {
+        return new Expect() {
+            @Override
+            public void expect(ClusterState state, SchedulerDriver mockDriver) throws AssertionError {
+                Plan plan = state.getPlans().stream()
+                        .filter(Plan::isDeployPlan)
+                        .findAny().get();
+
+                Status actualStatus = plan.getStatus();
+                Assert.assertEquals(expectedStatus, actualStatus);
+            }
+
+            @Override
+            public String getDescription() {
+                return String.format("Deploy plan has status: %s", expectedStatus);
+            }
+        };
+    }
+
+    /**
+     * Verifies that the scheduler's deploy plan has the expected status.
+     */
+    public static Expect deployPhaseHasStatus(Status expectedStatus, String phaseName) {
+        return new Expect() {
+            @Override
+            public void expect(ClusterState state, SchedulerDriver mockDriver) throws AssertionError {
+                Plan plan = state.getPlans().stream()
+                        .filter(Plan::isDeployPlan)
+                        .findAny().get();
+
+                Phase phase = plan.getChildren().stream()
+                        .filter(p -> p.getName().equals(phaseName))
+                        .findAny().get();
+
+                Status actualStatus = phase.getStatus();
+                Assert.assertEquals(expectedStatus, actualStatus);
+            }
+
+            @Override
+            public String getDescription() {
+                return String.format("Deploy phase: %s has status: %s", phaseName, expectedStatus);
+            }
+        };
+    }
+
+    /**
+     * Verifies that the scheduler's deploy plan has the expected status.
+     */
+    public static Expect deployStepHasStatus(Status expectedStatus, String phaseName, String stepName) {
+        return new Expect() {
+            @Override
+            public void expect(ClusterState state, SchedulerDriver mockDriver) throws AssertionError {
+                Plan plan = state.getPlans().stream()
+                        .filter(Plan::isDeployPlan)
+                        .findAny().get();
+
+                Phase phase = plan.getChildren().stream()
+                        .filter(p -> p.getName().equals(phaseName))
+                        .findAny().get();
+
+                Step step = phase.getChildren().stream()
+                        .filter(s -> s.getName().equals(stepName))
+                        .findAny().get();
+
+                Status actualStatus = step.getStatus();
+                Assert.assertEquals(expectedStatus, actualStatus);
+            }
+
+            @Override
+            public String getDescription() {
+                return String.format("Deploy phase: %s step: %s has status: %s", phaseName, stepName, expectedStatus);
             }
         };
     }

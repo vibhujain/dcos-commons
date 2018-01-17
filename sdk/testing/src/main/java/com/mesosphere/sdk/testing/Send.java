@@ -1,5 +1,7 @@
 package com.mesosphere.sdk.testing;
 
+import com.mesosphere.sdk.scheduler.plan.Phase;
+import com.mesosphere.sdk.scheduler.plan.Plan;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
@@ -28,6 +30,46 @@ public interface Send extends SimulationTick {
             @Override
             public String getDescription() {
                 return String.format("Framework registration completed");
+            }
+        };
+    }
+
+    public static Send continueDeploy() {
+        return new Send() {
+            @Override
+            public void send(ClusterState state, SchedulerDriver mockDriver, Scheduler scheduler) {
+                Plan plan = state.getPlans().stream()
+                        .filter(Plan::isDeployPlan)
+                        .findAny().get();
+
+                plan.proceed();
+            }
+
+            @Override
+            public String getDescription() {
+                return String.format("Continue deploy plan");
+            }
+        };
+    }
+
+    public static Send continueDeployPhase(String phaseName) {
+        return new Send() {
+            @Override
+            public void send(ClusterState state, SchedulerDriver mockDriver, Scheduler scheduler) {
+                Plan plan = state.getPlans().stream()
+                        .filter(Plan::isDeployPlan)
+                        .findAny().get();
+
+                Phase phase = plan.getChildren().stream()
+                        .filter(p -> p.getName().equals(phaseName))
+                        .findAny().get();
+
+                phase.proceed();
+            }
+
+            @Override
+            public String getDescription() {
+                return String.format("Continue deploy phase: %s", phaseName);
             }
         };
     }
