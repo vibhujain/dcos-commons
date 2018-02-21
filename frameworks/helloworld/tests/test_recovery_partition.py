@@ -1,11 +1,16 @@
 import pytest
+import time
+import shakedown
+
 import sdk_cmd
 import sdk_hosts
 import sdk_install
 import sdk_marathon
 import sdk_tasks
 import sdk_utils
-import shakedown
+import sdk_ec2
+import sdk_plan
+
 from tests import config
 
 
@@ -26,11 +31,19 @@ def configure_package(configure_security):
 
 
 @pytest.mark.recovery
+@pytest.mark.ben
 def test_partition():
-    host = sdk_hosts.system_host(config.SERVICE_NAME, "hello-0-server")
-    shakedown.partition_agent(host)
-    shakedown.reconnect_agent(host)
-    config.check_running()
+    ip_addresses = list(shakedown.get_service_ips(config.SERVICE_NAME, "hello-0-server"))
+    assert len(ip_addresses) is 1
+
+    partitioner = sdk_ec2.EC2Partitioner(ip_addresses[0])
+    try:
+        partitioner.partition()
+        sdk_plan.wait_for_in_progress_recovery(config.SERVICE_NAME)
+    finally:
+        partitioner.heal_partition()
+
+    sdk_plan.wait_for_completed_recovery(config.SERVICE_NAME)
 
 
 @pytest.mark.recovery
