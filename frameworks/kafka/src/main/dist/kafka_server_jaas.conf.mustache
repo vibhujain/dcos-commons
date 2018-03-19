@@ -8,6 +8,17 @@ KafkaServer {
     principal="{{SECURITY_KERBEROS_PRIMARY}}@{{SECURITY_KERBEROS_REALM}}";
 };
 
+KafkaClient {
+    com.sun.security.auth.module.Krb5LoginModule required
+    doNotPrompt=true
+    useTicketCache=false
+    principal="{{SECURITY_KERBEROS_PRIMARY}}@{{SECURITY_KERBEROS_REALM}}";
+    useKeyTab=true
+    serviceName="kafka"
+    keyTab="kafka.keytab"
+    client=true;
+};
+
 {{#SECURITY_KERBEROS_ENABLED_FOR_ZOOKEEPER}}
 // Zookeeper client authentication
 Client {
