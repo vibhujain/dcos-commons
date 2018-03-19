@@ -25,12 +25,14 @@ def get_service_principals(service_name: str, realm: str) -> list:
     """
     primaries = ["kafka", ]
 
-    tasks = [
-        "kafka-0-broker",
-        "kafka-1-broker",
-        "kafka-2-broker",
-    ]
-    instances = map(lambda task: sdk_hosts.autoip_host(service_name, task), tasks)
+    # tasks = [
+    #     "kafka-0-broker",
+    #     "kafka-1-broker",
+    #     "kafka-2-broker",
+    # ]
+    # instances = map(lambda task: sdk_hosts.autoip_host(service_name, task), tasks)
+    # TODO: Generate principals without FDQNS
+    instances = [None, ]
 
     principals = kerberos.generate_principal_list(primaries, instances, realm)
     principals.extend(kerberos.generate_principal_list(USERS, [None, ], realm))

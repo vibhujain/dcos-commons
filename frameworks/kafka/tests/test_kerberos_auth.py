@@ -46,6 +46,7 @@ def kafka_server(kerberos):
             "security": {
                 "kerberos": {
                     "enabled": True,
+                    "debug": True,
                     "kdc": {
                         "hostname": kerberos.get_host(),
                         "port": int(kerberos.get_port())
