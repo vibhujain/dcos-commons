@@ -5,7 +5,7 @@ KafkaServer {
     storeKey=true
     useTicketCache=false
     keyTab="kafka.keytab"
-    principal="{{SECURITY_KERBEROS_PRIMARY}}/{{TASK_NAME}}.{{FRAMEWORK_HOST}}@{{SECURITY_KERBEROS_REALM}}";
+    principal="{{SECURITY_KERBEROS_PRIMARY}}@{{SECURITY_KERBEROS_REALM}}";
 };
 
 {{#SECURITY_KERBEROS_ENABLED_FOR_ZOOKEEPER}}
@@ -16,7 +16,7 @@ Client {
     storeKey=true
     useTicketCache=false
     keyTab="kafka.keytab"
-    principal="{{SECURITY_KERBEROS_PRIMARY}}/{{TASK_NAME}}.{{FRAMEWORK_HOST}}@{{SECURITY_KERBEROS_REALM}}";
+    principal="{{SECURITY_KERBEROS_PRIMARY}}@{{SECURITY_KERBEROS_REALM}}";
 };
 {{/SECURITY_KERBEROS_ENABLED_FOR_ZOOKEEPER}}
 
