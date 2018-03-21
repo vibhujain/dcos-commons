@@ -17,45 +17,49 @@ pods:
       {{VIRTUAL_NETWORK_NAME}}:
         labels: {{VIRTUAL_NETWORK_PLUGIN_LABELS}}
     {{/ENABLE_VIRTUAL_NETWORK}}
+    volume:
+          path: container-path
+          type: {{NODE_DISK_TYPE}}
+          size: {{NODE_DISK}}
+    resource-sets:
+      server-resources:
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
+        ports:
+          tracker:
+            port: 8888
+          ui:
+            port: 8889
     tasks:
       apiserver:
         goal: RUNNING
         cmd: |
-          ./heron-install-0.17.5-ubuntu.sh
-
+          chmod +x heron-*.sh
+          ./heron-install-*.sh --user
           heron-apiserver \
           --base-template mesos \
           --cluster sandbox
-        cpus: {{NODE_CPUS}}
-        memory: {{NODE_MEM}}
-        volume:
-          path: "heron-container-path"
-          type: {{NODE_DISK_TYPE}}
-          size: {{NODE_DISK}}
-        env:
+        resource-set: server-resources
       tracker:
         goal: RUNNING
         cmd: |
-          ./heron-install-0.17.5-ubuntu.sh
-
+          chmod +x heron-*.sh
+          ./heron-install-*.sh --user
           heron-tracker
-        cpus: {{NODE_CPUS}}
-        memory: {{NODE_MEM}}
-        ports:
-          tracker-http:
-            port: 8888
+        resource-set: server-resources
       ui:
         goal: RUNNING
         cmd: |
-          ./heron-install-0.17.5-ubuntu.sh
-
+          chmod +x heron-*.sh
+          ./heron-install-*.sh --user
           heron-ui
-        cpus: {{NODE_CPUS}}
-        memory: {{NODE_MEM}}
-        ports:
-          ui-http:
-            port: 8889
+        resource-set: server-resources
 plans:
   deploy:
     strategy: serial
-
+    phases:
+      node-deploy:
+        strategy: serial
+        pod: heron
+        steps:
+         - default: [[apiserver, tracker, ui]]

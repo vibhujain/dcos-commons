@@ -24,5 +24,6 @@ def configure_package(configure_security):
 
 @pytest.mark.sanity
 @pytest.mark.smoke
+@pytest.mark.heron
 def test_install():
     pass # package installed and appeared healthy!
