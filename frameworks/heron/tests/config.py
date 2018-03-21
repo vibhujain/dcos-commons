@@ -1,0 +1,4 @@
+PACKAGE_NAME = 'heron'
+SERVICE_NAME = 'heron'
+DEFAULT_TASK_COUNT = 1
+

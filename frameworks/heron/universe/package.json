@@ -1,0 +1,15 @@
+{
+  "packagingVersion": "4.0",
+  "upgradesFrom": ["{{upgrades-from}}"],
+  "downgradesTo": ["{{downgrades-to}}"],
+  "minDcosReleaseVersion": "1.9",
+  "name": "heron",
+  "version": "{{package-version}}",
+  "maintainer": "support@mesosphere.io",
+  "description": "Heron on DC/OS",
+  "selected": false,
+  "framework": true,
+  "tags": ["heron"],
+  "postInstallNotes": "DC/OS Heron service is being installed!\n\n\tDocumentation: {{documentation-path}}\n\tIssues: {{issues-path}}",
+  "postUninstallNotes": "DC/OS Heron is being uninstalled."
+}

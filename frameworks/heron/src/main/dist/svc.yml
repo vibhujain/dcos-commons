@@ -1,0 +1,52 @@
+name: {{FRAMEWORK_NAME}}
+scheduler:
+  principal: {{FRAMEWORK_PRINCIPAL}}
+  user: {{FRAMEWORK_USER}}
+pods:
+  heron:
+    count: {{NODE_COUNT}}
+    placement: '{{{NODE_PLACEMENT}}}'
+    uris:
+      - {{BOOTSTRAP_URI}}
+      - {{EXECUTOR_URI}}
+      - {{JAVA_URI}}
+      - {{LIBMESOS_URI}}
+    {{#ENABLE_VIRTUAL_NETWORK}}
+    networks:
+      {{VIRTUAL_NETWORK_NAME}}:
+        labels: {{VIRTUAL_NETWORK_PLUGIN_LABELS}}
+    {{/ENABLE_VIRTUAL_NETWORK}}
+    tasks:
+      apiserver:
+        goal: RUNNING
+        cmd: |
+          heron-apiserver \
+          --base-template mesos \
+          --cluster sandbox
+        cpus: {{SERVER_CPUS}}
+        memory: {{SERVER_MEM}}
+        volume:
+          path: "heron-container-path"
+          type: {{SERVER_DISK_TYPE}}
+          size: {{SERVER_DISK}}
+        env:
+      tracker:
+        goal: RUNNING
+        cmd: "heron-tracker"
+        cpus: {{TRACKER_CPUS}}
+        memory: {{TRACKER_MEM}}
+        ports:
+          tracker-http:
+            port: {{TRACKER_PORT}}
+      ui:
+        goal: RUNNING
+        cmd: "heron-ui"
+        cpus: {{UI_CPUS}}
+        memory: {{UI_MEM}}
+        ports:
+          ui-http:
+            port: {{UI_PORT}}
+plans:
+  deploy:
+    strategy: serial
+
