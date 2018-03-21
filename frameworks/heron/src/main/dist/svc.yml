@@ -11,6 +11,7 @@ pods:
       - {{EXECUTOR_URI}}
       - {{JAVA_URI}}
       - {{LIBMESOS_URI}}
+      - {{HERON_INSTALLER_URI}}
     {{#ENABLE_VIRTUAL_NETWORK}}
     networks:
       {{VIRTUAL_NETWORK_NAME}}:
@@ -20,32 +21,40 @@ pods:
       apiserver:
         goal: RUNNING
         cmd: |
+          ./heron-install-0.17.5-ubuntu.sh
+
           heron-apiserver \
           --base-template mesos \
           --cluster sandbox
-        cpus: {{SERVER_CPUS}}
-        memory: {{SERVER_MEM}}
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
         volume:
           path: "heron-container-path"
-          type: {{SERVER_DISK_TYPE}}
-          size: {{SERVER_DISK}}
+          type: {{NODE_DISK_TYPE}}
+          size: {{NODE_DISK}}
         env:
       tracker:
         goal: RUNNING
-        cmd: "heron-tracker"
-        cpus: {{TRACKER_CPUS}}
-        memory: {{TRACKER_MEM}}
+        cmd: |
+          ./heron-install-0.17.5-ubuntu.sh
+
+          heron-tracker
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
         ports:
           tracker-http:
-            port: {{TRACKER_PORT}}
+            port: 8888
       ui:
         goal: RUNNING
-        cmd: "heron-ui"
-        cpus: {{UI_CPUS}}
-        memory: {{UI_MEM}}
+        cmd: |
+          ./heron-install-0.17.5-ubuntu.sh
+
+          heron-ui
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
         ports:
           ui-http:
-            port: {{UI_PORT}}
+            port: 8889
 plans:
   deploy:
     strategy: serial
