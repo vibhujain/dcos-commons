@@ -1,12 +1,18 @@
 {
   "assets": {
+    "container": {
+      "docker": {
+        "heron-image": "samvantran/heron:latest"
+      }
+    },
     "uris": {
       "jre-tar-gz": "{{jre-url}}",
       "libmesos-bundle-tar-gz": "{{libmesos-bundle-url}}",
       "bootstrap-zip": "{{artifact-dir}}/bootstrap.zip",
       "scheduler-zip": "{{artifact-dir}}/heron-scheduler.zip",
       "executor-zip": "{{artifact-dir}}/executor.zip",
-      "heron-installer-sh": "https://github.com/twitter/heron/releases/download/0.17.5/heron-install-0.17.5-ubuntu.sh"
+      "bazel-installer-sh": "https://s3-us-west-1.amazonaws.com/svt-dev/bazel-0.11.1-without-jdk-installer-linux-x86_64.sh",
+      "heron-installer-sh": "https://s3-us-west-1.amazonaws.com/svt-dev/heron-install-0.17.5-ubuntu.sh"
     }
   },
   "images": {

@@ -3,63 +3,123 @@ scheduler:
   principal: {{FRAMEWORK_PRINCIPAL}}
   user: {{FRAMEWORK_USER}}
 pods:
-  heron:
+  api:
     count: {{NODE_COUNT}}
+    image: {{HERON_IMAGE}}
     placement: '{{{NODE_PLACEMENT}}}'
     uris:
       - {{BOOTSTRAP_URI}}
       - {{EXECUTOR_URI}}
-      - {{JAVA_URI}}
-      - {{LIBMESOS_URI}}
       - {{HERON_INSTALLER_URI}}
-    {{#ENABLE_VIRTUAL_NETWORK}}
-    networks:
-      {{VIRTUAL_NETWORK_NAME}}:
-        labels: {{VIRTUAL_NETWORK_PLUGIN_LABELS}}
-    {{/ENABLE_VIRTUAL_NETWORK}}
+      - {{BAZEL_INSTALLER_URI}}
     volume:
-          path: container-path
-          type: {{NODE_DISK_TYPE}}
-          size: {{NODE_DISK}}
-    resource-sets:
-      server-resources:
+      path: api-container-path
+      type: {{NODE_DISK_TYPE}}
+      size: {{NODE_DISK}}
+    tasks:
+      server:
+        goal: RUNNING
         cpus: {{NODE_CPUS}}
         memory: {{NODE_MEM}}
         ports:
-          tracker:
-            port: 8888
-          ui:
-            port: 8889
-    tasks:
-      apiserver:
-        goal: RUNNING
+          server:
+            port: 9000
         cmd: |
+          set -e
+          env
+          echo $(pwd)
+          echo "This is a test for the api server"
+          java -version
+          python --version
+
+          chmod +x bazel-*.sh
+          ./bazel-*.sh --user
+          bazel version
+
           chmod +x heron-*.sh
-          ./heron-install-*.sh --user
+          ./heron-*.sh --user
+          heron version
+
           heron-apiserver \
           --base-template mesos \
           --cluster sandbox
-        resource-set: server-resources
-      tracker:
+  tracker:
+    count: {{NODE_COUNT}}
+    image: {{HERON_IMAGE}}
+    placement: '{{{NODE_PLACEMENT}}}'
+    uris:
+      - {{BOOTSTRAP_URI}}
+      - {{EXECUTOR_URI}}
+      - {{HERON_INSTALLER_URI}}
+      - {{BAZEL_INSTALLER_URI}}
+    volume:
+      path: tracker-container-path
+      type: {{NODE_DISK_TYPE}}
+      size: {{NODE_DISK}}
+    tasks:
+      server:
         goal: RUNNING
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
+        ports:
+          rest:
+            port: 8888
         cmd: |
+          set -e
+          env
+          echo $(pwd)
+          echo "This is a test for the tracker"
+          java -version
+          python --version
+
+          export JAVA_HOME=$(ls -d /usr/lib/jvm/java-8-openjdk-amd64)
+
+          chmod +x bazel-*.sh
+          ./bazel-*.sh --user
+          bazel version
+
           chmod +x heron-*.sh
-          ./heron-install-*.sh --user
+          ./heron-*.sh --user
+          heron version
+
           heron-tracker
-        resource-set: server-resources
-      ui:
+  ui:
+    count: {{NODE_COUNT}}
+    image: {{HERON_IMAGE}}
+    placement: '{{{NODE_PLACEMENT}}}'
+    uris:
+      - {{BOOTSTRAP_URI}}
+      - {{EXECUTOR_URI}}
+      - {{HERON_INSTALLER_URI}}
+      - {{BAZEL_INSTALLER_URI}}
+    volume:
+      path: ui-container-path
+      type: {{NODE_DISK_TYPE}}
+      size: {{NODE_DISK}}
+    tasks:
+      server:
         goal: RUNNING
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
+        ports:
+          http:
+            port: 8889
         cmd: |
+          set -e
+          env
+          echo $(pwd)
+          echo "This is a test for the ui"
+          java -version
+          python --version
+
+          export JAVA_HOME=$(ls -d /usr/lib/jvm/java-8-openjdk-amd64)
+
+          chmod +x bazel-*.sh
+          ./bazel-*.sh --user
+          bazel version
+
           chmod +x heron-*.sh
-          ./heron-install-*.sh --user
+          ./heron-*.sh --user
+          heron version
+
           heron-ui
-        resource-set: server-resources
-plans:
-  deploy:
-    strategy: serial
-    phases:
-      node-deploy:
-        strategy: serial
-        pod: heron
-        steps:
-         - default: [[apiserver, tracker, ui]]

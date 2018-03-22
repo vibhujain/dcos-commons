@@ -44,7 +44,9 @@
     "NODE_MEM": "{{node.mem}}",
     "NODE_DISK": "{{node.disk}}",
     "NODE_DISK_TYPE": "{{node.disk_type}}",
+    "BAZEL_INSTALLER_URI": "{{resource.assets.uris.bazel-installer-sh}}",
     "HERON_INSTALLER_URI": "{{resource.assets.uris.heron-installer-sh}}",
+    "HERON_IMAGE": "{{resource.assets.container.docker.heron-image}}",
     "JAVA_URI": "{{resource.assets.uris.jre-tar-gz}}",
     "EXECUTOR_URI": "{{resource.assets.uris.executor-zip}}",
     "BOOTSTRAP_URI": "{{resource.assets.uris.bootstrap-zip}}",
@@ -57,9 +59,9 @@
     "LIBMESOS_URI": "{{resource.assets.uris.libmesos-bundle-tar-gz}}"
   },
   "fetch": [
-    { "uri": "{{resource.assets.uris.bootstrap-zip}}", "cache": true },
+    { "uri": "{{resource.assets.uris.bootstrap-zip}}", "cache": false },
     { "uri": "{{resource.assets.uris.jre-tar-gz}}", "cache": true },
-    { "uri": "{{resource.assets.uris.scheduler-zip}}", "cache": true },
+    { "uri": "{{resource.assets.uris.scheduler-zip}}", "cache": false },
     { "uri": "{{resource.assets.uris.libmesos-bundle-tar-gz}}", "cache": true },
     { "uri": "{{resource.assets.uris.heron-installer-sh}}", "cache": true }
   ],
