@@ -6,6 +6,7 @@ SHOULD ALSO BE APPLIED TO sdk_hosts IN ANY OTHER PARTNER REPOS
 ************************************************************************
 '''
 import json
+import functools
 import retrying
 
 import sdk_cmd
@@ -93,6 +94,7 @@ def get_foldered_dns_name(service_name):
 @retrying.retry(
     wait_fixed=2000,
     stop_max_delay=5*60*1000)
+@functools.lru_cache()
 def get_crypto_id_domain():
     """
     Returns the cluster cryptographic ID equivalent of autoip.dcos.thisdcos.directory.
