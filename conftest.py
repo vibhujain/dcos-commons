@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 # The following environment variable allows for log collection to be turned off.
 # This is useful, for example in testing.
 INTEGRATION_TEST_LOG_COLLECTION = sdk_utils.is_env_var_set(
-    'INTEGRATION_TEST_LOG_COLLECTION', default=str(True)
+    'INTEGRATION_TEST_LOG_COLLECTION', default=str(False)
 )
 
 
