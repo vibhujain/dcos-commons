@@ -207,9 +207,7 @@ public class SchedulerBuilder {
      */
     public AbstractScheduler build() {
         // If we're running in multi-service mode, update our logger to include the service name/"namespace".
-        Optional<String> namespace = multiServiceFrameworkName.isPresent()
-                ? Optional.of(originalServiceSpec.getName())
-                : Optional.empty();
+        Optional<String> namespace = multiServiceFrameworkName.map(i -> originalServiceSpec.getName());
         logger = LoggingUtils.getLogger(getClass(), namespace);
 
         // If region awareness is enabled (via java bit or via env) and the cluster supports it, update the ServiceSpec
@@ -254,9 +252,7 @@ public class SchedulerBuilder {
 
             DefaultServiceSpec.Builder builder =
                     DefaultServiceSpec.newBuilder(originalServiceSpec).pods(updatedPodSpecs);
-            if (schedulerRegion.isPresent()) {
-                builder.region(schedulerRegion.get());
-            }
+            schedulerRegion.ifPresent(builder::region);
             serviceSpec = builder.build();
         } else {
             serviceSpec = originalServiceSpec;

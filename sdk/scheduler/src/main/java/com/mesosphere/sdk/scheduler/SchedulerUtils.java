@@ -31,13 +31,18 @@ public class SchedulerUtils {
             throw new IllegalArgumentException("Service names may not contain double underscores: " + name);
         }
 
+        name = stripLeadingSlash(name);
+
+        // Replace any other slashes (e.g. from folder support) with double underscores:
+        name = name.replace(PersisterUtils.PATH_DELIM_STR, SLASH_REPLACEMENT);
+        return name;
+    }
+
+    public static String stripLeadingSlash(String name) {
         if (name.startsWith(PersisterUtils.PATH_DELIM_STR)) {
             // Trim any leading slash
             name = name.substring(PersisterUtils.PATH_DELIM_STR.length());
         }
-
-        // Replace any other slashes (e.g. from folder support) with double underscores:
-        name = name.replace(PersisterUtils.PATH_DELIM_STR, SLASH_REPLACEMENT);
         return name;
     }
 }

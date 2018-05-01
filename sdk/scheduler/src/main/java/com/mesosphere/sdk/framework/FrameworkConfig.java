@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.mesosphere.sdk.specification.PodSpec;
+import com.mesosphere.sdk.specification.yaml.RawPod;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -31,6 +33,7 @@ public class FrameworkConfig {
     private final String zookeeperHostPort;
     private final ImmutableList<String> preReservedRoles;
     private final String role;
+    private final String hrole;
     private final String webUrl;
 
     /**
@@ -46,6 +49,7 @@ public class FrameworkConfig {
     private FrameworkConfig(
             String frameworkName,
             String role,
+            String hrole,
             String principal,
             String user,
             String zookeeperHostPort,
@@ -53,6 +57,7 @@ public class FrameworkConfig {
             String webUrl) {
         this.frameworkName = frameworkName;
         this.role = role;
+        this.hrole = hrole;
         this.principal = principal;
         this.user = user;
         this.zookeeperHostPort = zookeeperHostPort;
@@ -68,11 +73,12 @@ public class FrameworkConfig {
         return new FrameworkConfig(
                 rawServiceSpec.getName(),
                 serviceRole,
+                getHierarchicalServiceRole(rawServiceSpec.getName()),
                 getServicePrincipal(rawServiceSpec, rawServiceSpec.getName()),
                 getUser(rawServiceSpec),
                 getZkHostPort(rawServiceSpec),
                 getFrameworkPreReservedRoles(serviceRole, rawServiceSpec.getPods().values().stream()
-                        .map(pod -> pod.getPreReservedRole())
+                        .map(RawPod::getPreReservedRole)
                         .collect(Collectors.toList())),
                 rawServiceSpec.getWebUrl());
     }
@@ -84,11 +90,12 @@ public class FrameworkConfig {
         return new FrameworkConfig(
                 serviceSpec.getName(),
                 serviceSpec.getRole(),
+                serviceSpec.getRole(),
                 serviceSpec.getPrincipal(),
                 serviceSpec.getUser(),
                 serviceSpec.getZookeeperConnection(),
                 getFrameworkPreReservedRoles(serviceSpec.getRole(), serviceSpec.getPods().stream()
-                        .map(pod -> pod.getPreReservedRole())
+                        .map(PodSpec::getPreReservedRole)
                         .collect(Collectors.toList())),
                 serviceSpec.getWebUrl());
     }
@@ -103,6 +110,7 @@ public class FrameworkConfig {
         return new FrameworkConfig(
                 frameworkName,
                 getServiceRole(frameworkName),
+                getHierarchicalServiceRole(frameworkName),
                 envStore.getOptionalNonEmpty("FRAMEWORK_PRINCIPAL", frameworkName + DEFAULT_PRINCIPAL_SUFFIX),
                 envStore.getOptionalNonEmpty("FRAMEWORK_USER", DcosConstants.DEFAULT_SERVICE_USER),
                 envStore.getOptionalNonEmpty("FRAMEWORK_ZOOKEEPER", DcosConstants.MESOS_MASTER_ZK_CONNECTION_STRING),
@@ -148,8 +156,16 @@ public class FrameworkConfig {
     /**
      * Returns the 'main' role to register as.
      */
+    @Deprecated
     public String getRole() {
         return role;
+    }
+
+    /**
+     * Returns the 'main' role to register as. (Hierarchical Role)
+     */
+    public String getHrole() {
+        return hrole;
     }
 
     /**
@@ -183,6 +199,22 @@ public class FrameworkConfig {
         // Slashes are currently banned from roles by as of mesos commit e0d8cc7c. Sounds like they will be allowed
         // again in 1.4 when hierarchical roles are supported.
         return SchedulerUtils.withEscapedSlashes(frameworkName) + DEFAULT_ROLE_SUFFIX;
+    }
+
+    /**
+     * Returns the configured Mesos role to use for running the service, based on the service name.
+     * Unlike the Mesos principal and pre-reserved roles, this value cannot be configured directly via the YAML schema.
+     *
+     * For example: /path/to/kafka => path__to__kafka-role
+     */
+    private static String getHierarchicalServiceRole(String frameworkName) {
+        // Use <svcname>-role (or throw if svcname is missing)
+
+        // If the service name has a leading slash (due to folders), omit that leading slash from the role.
+        // This is done with the reasoning that "/path/to/kafka" and "path/to/kafka" should be equivalent.
+
+        // TODO add some checks e.g.: no '//' should be present.
+        return SchedulerUtils.stripLeadingSlash(frameworkName) + DEFAULT_ROLE_SUFFIX;
     }
 
     /**

@@ -132,14 +132,16 @@ public class FrameworkRunner {
         // The framework ID is not available when we're being started for the first time.
         frameworkId.ifPresent(fwkInfoBuilder::setId);
 
-        if (frameworkConfig.getPreReservedRoles().isEmpty()) {
-            setRole(fwkInfoBuilder, frameworkConfig.getRole());
-        } else {
-            fwkInfoBuilder.addCapabilitiesBuilder()
-                    .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE);
-            fwkInfoBuilder
-                    .addRoles(frameworkConfig.getRole())
-                    .addAllRoles(frameworkConfig.getPreReservedRoles());
+        fwkInfoBuilder
+                .addCapabilitiesBuilder()
+                .setType(Protos.FrameworkInfo.Capability.Type.MULTI_ROLE);
+
+        fwkInfoBuilder
+                .addRoles(frameworkConfig.getRole())
+                .addRoles(frameworkConfig.getHrole());
+
+        if (!frameworkConfig.getPreReservedRoles().isEmpty()) {
+            fwkInfoBuilder.addAllRoles(frameworkConfig.getPreReservedRoles());
         }
 
         if (!StringUtils.isEmpty(frameworkConfig.getWebUrl())) {
@@ -181,17 +183,9 @@ public class FrameworkRunner {
         ApiServer httpServer = ApiServer.start(
                 schedulerConfig,
                 resources,
-                new Runnable() {
-            @Override
-            public void run() {
-                LOGGER.info("Started trivially healthy API server.");
-            }
-        });
+                () -> LOGGER.info("Started trivially healthy API server.")
+        );
         httpServer.join();
     }
 
-    @SuppressWarnings("deprecation") // mute warning for FrameworkInfo.setRole()
-    private static void setRole(Protos.FrameworkInfo.Builder fwkInfoBuilder, String role) {
-        fwkInfoBuilder.setRole(role);
-    }
 }
